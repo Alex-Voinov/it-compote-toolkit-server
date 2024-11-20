@@ -1,4 +1,5 @@
 const hooliHopService = require("./services/hooliHopService");
+const { capitalize } = require('./utilities/strFunc')
 
 class Controllers {
     async getUser(req, res, next) {
@@ -8,7 +9,7 @@ class Controllers {
                 const informationReceived = [
                     ...(tel ? [tel] : []),
                     ...(email ? [email] : []),
-                    ...(fullName ? fullName.split(' ') : []),
+                    ...(fullName ? fullName.split(' ').map(partName => capitalize(partName)) : []),
                 ];
                 const fundStudnet = await hooliHopService.getStudent(informationReceived);
                 console.log(fundStudnet)

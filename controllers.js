@@ -4,12 +4,15 @@ class Controllers {
     async getUser(req, res, next) {
         try {
             const { fullName, email, tel } = req.query;
-            const params = {};
-            if (email) params.email = email;
-            if (fullName) params.name = fullName;
-            if (tel) params.phone = tel;
-            const fundStudnet = await hooliHopService.getStudent(params);
-            console.log(fundStudnet)
+            if (fullName || email || tel) {
+                const informationReceived = [
+                    ...(tel ? [tel] : []),
+                    ...(email ? [email] : []),
+                    ...(fullName ? fullName.split(' ') : []),
+                ];
+                const fundStudnet = await hooliHopService.getStudent(informationReceived);
+                console.log(fundStudnet)
+            }
         } catch (error) {
             console.log(error)
         }

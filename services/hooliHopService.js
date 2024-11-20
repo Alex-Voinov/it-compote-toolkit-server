@@ -1,4 +1,6 @@
 const axios = require('axios');
+const countArrayElementsInObject = require('../utilities/bestCoincidence')
+const isCopyExistInArray = require('../utilities/existDuplicate')
 require('dotenv').config();
 
 
@@ -12,9 +14,40 @@ const axiosInstance = axios.create({
 class HooliHopService {
     getStudent = async (studentData) => {
         try {
-            const response = await axiosInstance.get("GetStudents");
-            console.log(response)
-            return response.data;
+            const maximumMatchScore = studentData.length
+            let bestMatchScore = 0
+            let bestCoincidence = null;
+            let perfectMatchs = []
+            for (let searchField of studentData) {
+                const posibleResponse = await axiosInstance.get(
+                    "GetStudents",
+                    {
+                        params: {
+                            term: searchField
+                        }
+                    }
+                )
+                const possibleOption = posibleResponse.data.Students;
+                if (possibleOption) {
+                    for (let possibleStudent of possibleOption) {
+                        const currentCoincidence = countArrayElementsInObject(studentData, possibleStudent);
+                        if (currentCoincidence === maximumMatchScore) {
+                            if (perfectMatchs && !isCopyExistInArray(perfectMatchs, possibleStudent))
+                                perfectMatchs.push(possibleStudent)
+                        }
+                        else if (currentCoincidence > bestMatchScore) {
+                            bestMatchScore = currentCoincidence
+                            bestCoincidence = [possibleStudent]
+                        } else if (currentCoincidence > 0 && currentCoincidence === bestMatchScore) {
+                            if (!isCopyExistInArray(bestCoincidence, possibleStudent))
+                                bestCoincidence.push(possibleStudent)
+                        }
+                    }
+                    if (perfectMatchs.length === 1) return perfectMatchs[0]
+                    else if (perfectMatchs) return perfectMatchs
+                }
+            }
+            return bestCoincidence;
         } catch (error) {
             console.error('Error in Hooli-Hop service:', error.message);
             throw error;

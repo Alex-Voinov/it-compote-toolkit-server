@@ -17,9 +17,9 @@ class Controllers {
                     status:
                         (!fundStudnet || Array.isArray(fundStudnet) && !fundStudnet.length)
                             ? 'no matches'
-                            : (typeof value === 'object'
-                                ? 'perfect match'
-                                : 'matches found'
+                            : (Array.isArray(fundStudnet)
+                                ? 'matches found'
+                                : 'perfect match'
                             ),
                     studentsData: fundStudnet
                 })

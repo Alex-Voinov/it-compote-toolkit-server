@@ -13,7 +13,18 @@ class Controllers {
                 ];
                 const fundStudnet = await hooliHopService.getStudent(informationReceived);
                 console.log(fundStudnet)
+                return res.status(200).json({
+                    status:
+                        (!fundStudnet || Array.isArray(fundStudnet) && !fundStudnet.length)
+                            ? 'no matches'
+                            : (typeof value === 'object'
+                                ? 'perfect match'
+                                : 'matches found'
+                            ),
+                    studentsData: fundStudnet
+                })
             }
+            res.status(422)
         } catch (error) {
             console.log(error)
         }

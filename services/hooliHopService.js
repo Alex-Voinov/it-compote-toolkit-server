@@ -61,6 +61,22 @@ class HooliHopService {
             throw error;
         }
     }
+    pickGroup = async (level, discipline, age, lastTheme ) => {
+        try {
+            const response = await axiosInstance.get(
+                "GetEdUnits",
+                {
+                    params: {
+                        types: 'Group',
+                    }
+                }
+            );
+            const possibleGroups = response.data;
+        } catch (error) {
+            console.error('Error in Hooli-Hop service (pickGroup):', error.message);
+            throw error;
+        }
+    }
 }
 
 module.exports = new HooliHopService();

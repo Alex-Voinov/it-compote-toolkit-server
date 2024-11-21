@@ -38,6 +38,16 @@ class Controllers {
             console.error(`Ошибка в контроллере getDisciplines: ${error}.`)
         }
     }
+    async pickGroup(req, res, next) {
+        try {
+            const { level, discipline, age, lastTheme } = req.query;
+            const response = await hooliHopService.pickGroup(level, discipline, age, lastTheme )
+            // if (response.data.Disciplines) return res.status(200).json(response.data)
+            // return res.status(502)
+        } catch (error) {
+            console.error(`Ошибка в контроллере pickGroup: ${error}.`)
+        }
+    }
     
 }
 module.exports = new Controllers();

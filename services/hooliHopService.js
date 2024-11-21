@@ -49,7 +49,15 @@ class HooliHopService {
             }
             return bestCoincidence;
         } catch (error) {
-            console.error('Error in Hooli-Hop service:', error.message);
+            console.error('Error in Hooli-Hop service (getStudent):', error.message);
+            throw error;
+        }
+    }
+    getDisciplines = async () => {
+        try {
+            return await axiosInstance.get("GetDisciplines");
+        } catch (error) {
+            console.error('Error in Hooli-Hop service (getDisciplines):', error.message);
             throw error;
         }
     }

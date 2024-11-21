@@ -26,8 +26,18 @@ class Controllers {
             }
             res.status(422)
         } catch (error) {
-            console.log(error)
+            console.error(`Ошибка в контроллере getUser: ${error}.`)
         }
     }
+    async getDisciplines(req, res, next) {
+        try {
+            const response = await hooliHopService.getDisciplines()
+            if (response.data.Disciplines) return res.status(200).json(response.data)
+            return res.status(502)
+        } catch (error) {
+            console.error(`Ошибка в контроллере getDisciplines: ${error}.`)
+        }
+    }
+    
 }
 module.exports = new Controllers();

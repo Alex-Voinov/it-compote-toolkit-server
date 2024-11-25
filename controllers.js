@@ -12,7 +12,6 @@ class Controllers {
                     ...(fullName ? fullName.split(' ').map(partName => capitalize(partName)) : []),
                 ];
                 const fundStudnet = await hooliHopService.getStudent(informationReceived);
-                console.log(fundStudnet)
                 return res.status(200).json({
                     status:
                         (!fundStudnet || Array.isArray(fundStudnet) && !fundStudnet.length)
@@ -38,16 +37,55 @@ class Controllers {
             console.error(`Ошибка в контроллере getDisciplines: ${error}.`)
         }
     }
+    async getLastThems(req, res, next) {
+        try {
+            const { studentId } = req.query;
+            const response = await hooliHopService.getLastThems(studentId)
+            const coursesData = response.data.EdUnitStudents
+            if (coursesData) {
+                const formattedCourses = {} // объект, имеющий вид имя курса - последняя пройденная тема
+                for (let course of coursesData) {
+                    const courseName = course.EdUnitDiscipline
+                    const daysDataNative = course.Days
+                    if (daysDataNative.length) {
+                        const daysData = daysDataNative.filter(day => day.Description)
+                        const lastDayData = daysData.reduce((max, current) => {
+                            // Преобразуем строки в объекты Date для корректного сравнения
+                            return new Date(current.Date) > new Date(max.Date) ? current : max;
+                        });
+                        if (lastDayData) {
+                            console.log(lastDayData)
+                            if (!(courseName in formattedCourses)) // если о курсе ещё нет информации
+                                formattedCourses[courseName] = lastDayData
+                            else if (courseName in formattedCourses && lastDayData.Date > formattedLessons[courseName]) // если есть и она новее предыдущей
+                                formattedCourses[courseName] = lastDayData
+                        }
+                        else {
+                            console.log(`В курсе ${courseName} не найдено уроков с комментариями`)
+                        }
+                    } else {
+                        console.log('Нет дней в принципе')
+                    }
+                }
+                return res.status(200).json(formattedCourses)
+            } else {
+                console.log('Данных о курсе не найденно')
+            }
+            return res.status(502)
+        } catch (error) {
+            console.error(`Ошибка в контроллере getLastThems: ${error}.`)
+        }
+    }
     async pickGroup(req, res, next) {
         try {
             const { level, discipline, age, lastTheme } = req.query;
-            const response = await hooliHopService.pickGroup(level, discipline, age, lastTheme )
+            const response = await hooliHopService.pickGroup(level, discipline, age, lastTheme)
             // if (response.data.Disciplines) return res.status(200).json(response.data)
             // return res.status(502)
         } catch (error) {
             console.error(`Ошибка в контроллере pickGroup: ${error}.`)
         }
     }
-    
+
 }
 module.exports = new Controllers();

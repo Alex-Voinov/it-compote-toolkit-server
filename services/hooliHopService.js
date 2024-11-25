@@ -1,6 +1,7 @@
 const axios = require('axios');
 const countArrayElementsInObject = require('../utilities/bestCoincidence')
-const isCopyExistInArray = require('../utilities/existDuplicate')
+const isCopyExistInArray = require('../utilities/existDuplicate');
+const getCurrentDate = require('../utilities/currentDate');
 require('dotenv').config();
 
 
@@ -61,7 +62,32 @@ class HooliHopService {
             throw error;
         }
     }
-    pickGroup = async (level, discipline, age, lastTheme ) => {
+    getLastThems = async (
+        studentId
+    ) => {
+        try {
+            return await axiosInstance.get(
+                "GetEdUnitStudents",
+                {
+                    params: {
+                        studentClientId: studentId,
+                        queryDays: 'true',
+                        dateFrom: process.env.LESSON_TOPIC_COMMENT_START_DATE,
+                        dateTo: getCurrentDate() 
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in Hooli-Hop service (getLastThems):', error.message);
+            throw error;
+        }
+    }
+    pickGroup = async (
+        level,
+        discipline,
+        age,
+        lastTheme
+    ) => {
         try {
             const response = await axiosInstance.get(
                 "GetEdUnits",

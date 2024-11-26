@@ -1,4 +1,5 @@
 const hooliHopService = require("./services/hooliHopService");
+const googleSheetService = require("./services/googleSheetService");
 const { capitalize } = require('./utilities/strFunc')
 
 class Controllers {
@@ -54,10 +55,9 @@ class Controllers {
                             return new Date(current.Date) > new Date(max.Date) ? current : max;
                         });
                         if (lastDayData) {
-                            console.log(lastDayData)
                             if (!(courseName in formattedCourses)) // если о курсе ещё нет информации
                                 formattedCourses[courseName] = lastDayData
-                            else if (courseName in formattedCourses && lastDayData.Date > formattedLessons[courseName]) // если есть и она новее предыдущей
+                            else if (courseName in formattedCourses && lastDayData.Date > formattedCourses[courseName]) // если есть и она новее предыдущей
                                 formattedCourses[courseName] = lastDayData
                         }
                         else {
@@ -84,6 +84,15 @@ class Controllers {
             // return res.status(502)
         } catch (error) {
             console.error(`Ошибка в контроллере pickGroup: ${error}.`)
+        }
+    }
+    async getTopicsAcrossDisciplines(req, res, next) {
+        try {
+            const topics = await googleSheetService.getTopicsAcrossDisciplines()
+            if (topics) return res.status(200).json(topics)
+            return res.status(502)
+        } catch (error) {
+            console.error(`Ошибка в контроллере getTopicsAcrossDisciplines: ${error}.`)
         }
     }
 

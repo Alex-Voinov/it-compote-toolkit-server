@@ -73,7 +73,7 @@ class HooliHopService {
                         studentClientId: studentId,
                         queryDays: 'true',
                         dateFrom: process.env.LESSON_TOPIC_COMMENT_START_DATE,
-                        dateTo: getCurrentDate() 
+                        dateTo: getCurrentDate()
                     }
                 }
             );
@@ -89,15 +89,15 @@ class HooliHopService {
         lastTheme
     ) => {
         try {
-            const response = await axiosInstance.get(
-                "GetEdUnits",
-                {
-                    params: {
-                        types: 'Group',
-                    }
-                }
-            );
-            const possibleGroups = response.data;
+            // const response = await axiosInstance.get(
+            //     "GetEdUnits",
+            //     {
+            //         params: {
+            //             types: 'Group',
+            //         }
+            //     }
+            // );
+            // const possibleGroups = response.data;
         } catch (error) {
             console.error('Error in Hooli-Hop service (pickGroup):', error.message);
             throw error;

@@ -2,6 +2,7 @@ const axios = require('axios');
 const countArrayElementsInObject = require('../utilities/bestCoincidence')
 const isCopyExistInArray = require('../utilities/existDuplicate');
 const getCurrentDate = require('../utilities/currentDate');
+const defineLastThemes = require('../utilities/defineLastThemes');
 require('dotenv').config();
 
 
@@ -101,7 +102,33 @@ class HooliHopService {
             );
             // Группы с подходящей дисциплиной и уровнем
             const possibleGroups = response.data.EdUnits;
-            console.log(possibleGroups)
+            if (!possibleGroups.length) return []
+            const possibleGroupId = possibleGroups.filter(group => group.StudentsCount < process.env.MAX_STUDENTS_IN_GROUP).map(group => group.Id)
+            const getStudentsByIdGroupPromises = possibleGroupId.map(groupId => {
+                return axiosInstance.get(
+                    "GetEdUnitStudents",
+                    {
+                        params: {
+                            edUnitId: groupId,
+                            queryDays: true,
+                            dateFrom: "2000-01-01",
+                            dateTo: "3000-01-01"
+                        }
+                    }
+                );
+            })
+            const studentsByIdGroupResponse = await Promise.all(getStudentsByIdGroupPromises)
+            const studentsByIdGroup = studentsByIdGroupResponse.map(response => response.data.EdUnitStudents)
+            const lastThemes = studentsByIdGroup.map(defineLastThemes).map(courses => courses[discipline])
+            const groupIdToLastTheme = studentsByIdGroup.map(
+                 (group, index) => { return lastThemes[index] ? { [possibleGroupId[index]]: lastThemes[index].Description } : null }
+            ).filter(record => record !== null)
+            console.log(groupIdToLastTheme)
+            //console.log(studentsByIdGroup.map(students => defineLastThemes(students[0])[disciplines]))
+            // Проверить её, оставить только подходящие
+            // В подходящих по id учеников получить их дни рождеения
+            // Посчитать средние значения по группам, отфлитровать не подходящие
+            // Вернуть найденные
         } catch (error) {
             console.error('Error in Hooli-Hop service (pickGroup):', error.message);
             throw error;

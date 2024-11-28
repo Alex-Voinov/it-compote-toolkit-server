@@ -89,15 +89,19 @@ class HooliHopService {
         lastTheme
     ) => {
         try {
-            // const response = await axiosInstance.get(
-            //     "GetEdUnits",
-            //     {
-            //         params: {
-            //             types: 'Group',
-            //         }
-            //     }
-            // );
-            // const possibleGroups = response.data;
+            const response = await axiosInstance.get(
+                "GetEdUnits",
+                {
+                    params: {
+                        types: 'Group',
+                        disciplines: discipline,
+                        levels: level,
+                    }
+                }
+            );
+            // Группы с подходящей дисциплиной и уровнем
+            const possibleGroups = response.data.EdUnits;
+            console.log(possibleGroups)
         } catch (error) {
             console.error('Error in Hooli-Hop service (pickGroup):', error.message);
             throw error;

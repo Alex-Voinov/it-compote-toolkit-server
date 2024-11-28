@@ -54,7 +54,7 @@ class Controllers {
                             // Преобразуем строки в объекты Date для корректного сравнения
                             return new Date(current.Date) > new Date(max.Date) ? current : max;
                         });
-                        if (lastDayData) {
+                        if (lastDayData && lastDayData.Pass === false) {
                             if (!(courseName in formattedCourses)) // если о курсе ещё нет информации
                                 formattedCourses[courseName] = lastDayData
                             else if (courseName in formattedCourses && lastDayData.Date > formattedCourses[courseName]) // если есть и она новее предыдущей

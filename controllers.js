@@ -57,11 +57,11 @@ class Controllers {
     async pickGroup(req, res, next) {
         try {
             const { level, discipline, age, lastTheme } = req.query;
-            const response = await hooliHopService.pickGroup(level, discipline, age, lastTheme)
-            // if (response.data.Disciplines) return res.status(200).json(response.data)
-            // return res.status(502)
+            const suitableGroups = await hooliHopService.pickGroup(level, discipline, age, lastTheme)
+            return res.status(200).json({ suitableGroups: suitableGroups })
         } catch (error) {
             console.error(`Ошибка в контроллере pickGroup: ${error}.`)
+            res.status(400).json(error)
         }
     }
     async getTopicsAcrossDisciplines(req, res, next) {

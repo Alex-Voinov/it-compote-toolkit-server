@@ -91,6 +91,7 @@ class HooliHopService {
         lastTheme
     ) => {
         try {
+
             const response = await axiosInstance.get(
                 "GetEdUnits",
                 {
@@ -98,41 +99,79 @@ class HooliHopService {
                         types: 'Group',
                         disciplines: discipline,
                         levels: level,
+                        dateFrom: '2024-09-24'
                     }
                 }
             );
+
             // Группы с подходящей дисциплиной и уровнем
             const possibleGroups = response.data.EdUnits;
             if (!possibleGroups.length) return []
             const possibleGroupId = possibleGroups.filter(group => group.StudentsCount < process.env.MAX_STUDENTS_IN_GROUP).map(group => group.Id)
-            const getStudentsByIdGroupPromises = possibleGroupId.map(groupId => {
-                return axiosInstance.get(
-                    "GetEdUnitStudents",
-                    {
-                        params: {
-                            edUnitId: groupId,
-                            queryDays: true,
-                            dateFrom: "2000-01-01",
-                            dateTo: "3000-01-01"
-                        }
+            console.log(possibleGroupId.length)
+            let studentsByIdGroupResponse = [];
+            // console.log(possibleGroupId.length)
+            const lazyReq = possibleGroupId.length > 500
+            if (lazyReq) {
+                const amountBigStep = Math.ceil(possibleGroupId.length / 20)
+                for (let numberStep = 0; numberStep < amountBigStep; numberStep++) {
+                    const comleteRequests = numberStep * 20;
+                    const bufferForRequest = []
+                    // console.log(numberStep)
+                    for (let step = 0; step < 20; step++) {
+                        const currentStep = comleteRequests + step;
+                        if (currentStep === possibleGroupId.length) break;
+                        console.log(currentStep)
+                        bufferForRequest.push(
+                            axiosInstance.get(
+                                "GetEdUnitStudents",
+                                {
+                                    params: {
+                                        edUnitId: possibleGroupId[currentStep],
+                                        queryDays: true,
+                                        dateFrom: "2000-01-01",
+                                        dateTo: "3000-01-01"
+                                    }
+                                }
+                            )
+                        )
                     }
-                );
-            })
-            const studentsByIdGroupResponse = await Promise.all(getStudentsByIdGroupPromises)
+                    const bufferResponses = await Promise.all(bufferForRequest)
+                    await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 500))
+                    studentsByIdGroupResponse.push(...bufferResponses)
+                }
+            }
+            else {
+                const getStudentsByIdGroupPromises = possibleGroupId.map(groupId => {
+                    return axiosInstance.get(
+                        "GetEdUnitStudents",
+                        {
+                            params: {
+                                edUnitId: groupId,
+                                queryDays: true,
+                                dateFrom: "2000-01-01",
+                                dateTo: "3000-01-01"
+                            }
+                        }
+                    );
+                })
+                // console.log('тест')
+                // Место где возникает ошибка
+                studentsByIdGroupResponse = await Promise.all(getStudentsByIdGroupPromises)
+            }
+            console.log('Успешно')
+            if (lazyReq) await new Promise(resolve => setTimeout(resolve, Math.random() * 2500 + 5000))
             // Находим студентов в группе
             const studentsByIdGroup = studentsByIdGroupResponse.map(response => response.data.EdUnitStudents)
             // Определяем последние темы групп по студентам в них
             const lastThemes = studentsByIdGroup.map(defineLastThemes).map(courses => courses[discipline])
-            // Проверить это место
-            console.log(studentsByIdGroup)
-            console.log(lastThemes)
             const groupIdToLastTheme = Object.assign(
                 {},
                 ...studentsByIdGroup.map(  // Перебираем группы
                     (group, index) => {
                         return lastThemes[index] // Берем их темы
                             ? {
-                                [possibleGroupId[index]] 
+                                [possibleGroupId[index]]
                                     : lastThemes[index].Description // Формируем объект группы - индекс
                             } : null
                     }
@@ -153,6 +192,8 @@ class HooliHopService {
             // Проверка на возраст
             const groupsWthSuitableThemes = Object.keys(groupIdToLastTheme) // Id подохдящих групп
             // Запросы на получение студентов из групп
+            console.log(groupsWthSuitableThemes.length)
+            if (lazyReq) await new Promise(resolve => setTimeout(resolve, Math.random() * 2500 + 5000))
             const studentsFromAppropriateGroupsResponses = groupsWthSuitableThemes.map(
                 groupId => {
                     return axiosInstance.get("GetEdUnitStudents", {
@@ -164,19 +205,78 @@ class HooliHopService {
             )
             const studentsFromAppropriateGroups = await Promise.all(studentsFromAppropriateGroupsResponses)
             // Массивы группы - в них массив ID учеников
-            const studentsIdFromAppropriateGroups = studentsFromAppropriateGroups.map(response => response.data.EdUnitStudents.map(student => student.StudentClientId))
-            const studentsDataFromAppropriateGroupsResponses = await Promise.all(
-                studentsIdFromAppropriateGroups.flat().map(
-                    studentId => axiosInstance.get(
-                        "GetStudents",
-                        {
-                            params: {
-                                clientId: studentId,
-                            }
+            const studentsIdFromAppropriateGroups = studentsFromAppropriateGroups.map(
+                response => response.data.EdUnitStudents.map(
+                    student => student.StudentClientId
+                )
+            )
+            let studentsDataFromAppropriateGroupsResponses = []
+            if (lazyReq) {
+                let buffer = []
+                for (let studentID of studentsIdFromAppropriateGroups.flat()) {
+                    buffer.push(studentID)
+                    if (buffer.length === 5) {
+                        await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 500))
+                        studentsDataFromAppropriateGroupsResponses.push(
+                            ... (await Promise.all(
+                                buffer.map(
+                                    studentId => {
+                                        console.log(studentId)
+                                        return axiosInstance.get(
+                                            "GetStudents",
+                                            {
+                                                params: {
+                                                    clientId: studentId,
+                                                }
+                                            }
+                                        )
+                                    }
+                                )
+                            ))
+                        )
+                        buffer = []
+                    }
+                }
+                if (buffer.length > 0) {
+                    await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 500))
+                    studentsDataFromAppropriateGroupsResponses.push(
+                        ...(await Promise.all(
+                            buffer.map(
+                                studentId => {
+                                    console.log(studentId)
+                                    return axiosInstance.get(
+                                        "GetStudents",
+                                        {
+                                            params: {
+                                                clientId: studentId,
+                                            }
+                                        }
+                                    )
+                                }
+                            )
+                        ))
+                    )
+                    buffer = []
+                }
+            }
+            else {
+                studentsDataFromAppropriateGroupsResponses = await Promise.all(
+                    studentsIdFromAppropriateGroups.flat().map(
+                        studentId => {
+                            console.log(studentId)
+                            return axiosInstance.get(
+                                "GetStudents",
+                                {
+                                    params: {
+                                        clientId: studentId,
+                                    }
+                                }
+                            )
                         }
                     )
                 )
-            )
+            }
+            console.log('Ура')
             // Формируем объект StudentID - age
             const studentsDataFromAppropriateGroupsBD = Object.assign({}, ...studentsDataFromAppropriateGroupsResponses.map(
                 response => {

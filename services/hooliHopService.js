@@ -108,20 +108,16 @@ class HooliHopService {
             const possibleGroups = response.data.EdUnits;
             if (!possibleGroups.length) return []
             const possibleGroupId = possibleGroups.filter(group => group.StudentsCount < process.env.MAX_STUDENTS_IN_GROUP).map(group => group.Id)
-            console.log(possibleGroupId.length)
             let studentsByIdGroupResponse = [];
-            // console.log(possibleGroupId.length)
             const lazyReq = possibleGroupId.length > 500
             if (lazyReq) {
                 const amountBigStep = Math.ceil(possibleGroupId.length / 20)
                 for (let numberStep = 0; numberStep < amountBigStep; numberStep++) {
                     const comleteRequests = numberStep * 20;
                     const bufferForRequest = []
-                    // console.log(numberStep)
                     for (let step = 0; step < 20; step++) {
                         const currentStep = comleteRequests + step;
                         if (currentStep === possibleGroupId.length) break;
-                        console.log(currentStep)
                         bufferForRequest.push(
                             axiosInstance.get(
                                 "GetEdUnitStudents",
@@ -155,11 +151,8 @@ class HooliHopService {
                         }
                     );
                 })
-                // console.log('тест')
-                // Место где возникает ошибка
                 studentsByIdGroupResponse = await Promise.all(getStudentsByIdGroupPromises)
             }
-            console.log('Успешно')
             if (lazyReq) await new Promise(resolve => setTimeout(resolve, Math.random() * 2500 + 5000))
             // Находим студентов в группе
             const studentsByIdGroup = studentsByIdGroupResponse.map(response => response.data.EdUnitStudents)
@@ -192,8 +185,8 @@ class HooliHopService {
             // Проверка на возраст
             const groupsWthSuitableThemes = Object.keys(groupIdToLastTheme) // Id подохдящих групп
             // Запросы на получение студентов из групп
-            console.log(groupsWthSuitableThemes.length)
-            if (lazyReq) await new Promise(resolve => setTimeout(resolve, Math.random() * 2500 + 5000))
+            const lazyStudentReq = groupsWthSuitableThemes.length > 200
+            if (lazyStudentReq) await new Promise(resolve => setTimeout(resolve, Math.random() * 2500 + 5000))
             const studentsFromAppropriateGroupsResponses = groupsWthSuitableThemes.map(
                 groupId => {
                     return axiosInstance.get("GetEdUnitStudents", {
@@ -221,7 +214,6 @@ class HooliHopService {
                             ... (await Promise.all(
                                 buffer.map(
                                     studentId => {
-                                        console.log(studentId)
                                         return axiosInstance.get(
                                             "GetStudents",
                                             {
@@ -243,7 +235,6 @@ class HooliHopService {
                         ...(await Promise.all(
                             buffer.map(
                                 studentId => {
-                                    console.log(studentId)
                                     return axiosInstance.get(
                                         "GetStudents",
                                         {
@@ -263,7 +254,6 @@ class HooliHopService {
                 studentsDataFromAppropriateGroupsResponses = await Promise.all(
                     studentsIdFromAppropriateGroups.flat().map(
                         studentId => {
-                            console.log(studentId)
                             return axiosInstance.get(
                                 "GetStudents",
                                 {
@@ -276,7 +266,6 @@ class HooliHopService {
                     )
                 )
             }
-            console.log('Ура')
             // Формируем объект StudentID - age
             const studentsDataFromAppropriateGroupsBD = Object.assign({}, ...studentsDataFromAppropriateGroupsResponses.map(
                 response => {

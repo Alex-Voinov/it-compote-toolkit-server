@@ -45,7 +45,9 @@ class Controllers {
             const response = await hooliHopService.getLastThems(studentId)
             const coursesData = response.data.EdUnitStudents
             if (coursesData) {
-                return res.status(200).json(defineLastThemes(coursesData, true))
+                return res.status(200).json(
+                    defineLastThemes(coursesData, true)
+                )
             } else {
                 console.log('Данных о курсе не найденно')
             }

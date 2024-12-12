@@ -5,7 +5,7 @@ const router = require('./router')
 const path = require('path');
 
 const corsOptions = {
-    origin: '*',
+    origin: process.env.CLIENT_URL,
     credentials: true,
 };
 

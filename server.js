@@ -5,7 +5,7 @@ const router = require('./router')
 const path = require('path');
 
 const corsOptions = {
-    origin: process.env.CLIENT_URL,
+    origin: '*',
     credentials: true,
 };
 
@@ -24,7 +24,7 @@ app.get('*', (req, res) => {
 });
 
 
-const PORT = process.env.PORT || 5000;
+const PORT = 80|| process.env.PORT || 5000;
 
 
 app.listen(PORT, () => {

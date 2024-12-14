@@ -101,6 +101,51 @@ class HooliHopService {
             throw error;
         }
     }
+
+    getActivitiesForTeacherWithoutThemes = async (
+        teacherId
+    ) => {
+        try {
+            const activitiesTeacher = await axiosInstance.get(
+                "GetEdUnits",
+                {
+                    params: {
+                        teacherId,
+                        dateFrom: process.env.START_DATE_FOR_SEARCH,
+                        queryDays: 'true',
+                        dateTo: getCurrentDate()
+                    }
+                }
+            );
+            const posibleLessons = activitiesTeacher.data.EdUnits;
+            if (!posibleLessons) return []
+            const posibleLessonsWithDay = posibleLessons.filter(lesson => lesson.Days.length > 0) // Оставляем только уроки с информацией о днях
+            const posibleLessonsFormated = posibleLessonsWithDay.map(lesson => {
+                return {
+                    Id: lesson.Id,
+                    Type: lesson.Type,
+                    Name: lesson.Name,
+                    Discipline: lesson.Discipline,
+                    Days: lesson.Days.filter(
+                        day => !day.Description || day.Description.length === 0
+                    ).map(
+                        day => {
+                            return {
+                                Date: day.Date,
+                                Description: day.Date
+                            }
+                        })
+                }
+            }).filter(
+                lesson => lesson.Days.length
+            ) // оставляем уроки, по которым нет описания в удобнов формате
+            return posibleLessonsFormated
+        } catch (error) {
+            console.error('Error in Hooli-Hop service (getLastThems):', error.message);
+            throw error;
+        }
+    }
+
     pickGroup = async (
         level,
         discipline,
@@ -108,7 +153,6 @@ class HooliHopService {
         lastTheme
     ) => {
         try {
-
             const response = await axiosInstance.get(
                 "GetEdUnits",
                 {
@@ -116,7 +160,7 @@ class HooliHopService {
                         types: 'Group',
                         disciplines: discipline,
                         levels: level,
-                        dateFrom: '2024-09-24'
+                        dateFrom: process.env.START_DATE_FOR_SEARCH
                     }
                 }
             );

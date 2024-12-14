@@ -64,6 +64,23 @@ class HooliHopService {
             throw error;
         }
     }
+
+    getTeacher = async (email) => {
+        try {
+            return await axiosInstance.get(
+                "GetTeachers",
+                {
+                    params: {
+                        term: email
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in Hooli-Hop service (getTeacher):', error.message);
+            throw error;
+        }
+    }
+
     getLastThems = async (
         studentId
     ) => {

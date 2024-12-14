@@ -3,6 +3,8 @@ const googleSheetService = require("./services/googleSheetService");
 const { capitalize } = require('./utilities/strFunc')
 const defineLastThemes = require('./utilities/defineLastThemes')
 
+require('dotenv').config()
+
 class Controllers {
     async getUser(req, res, next) {
         try {
@@ -76,5 +78,32 @@ class Controllers {
         }
     }
 
+    async verifyTeacher(req, res, next) {
+        try {
+            const { email, password } = req.query;
+            if (!(email && email.length > 0 && password && password.length > 0)) return res.status(403).json({ message: 'Пустые поля' })
+            if (password.trim() !== process.env.TEACHER_CODE) return res.status(404).json({ message: 'Пароль не верен' })
+            const HHResponse = await hooliHopService.getTeacher(email);
+            const possibleTeachers = HHResponse?.data?.Teachers
+            if (!(possibleTeachers && possibleTeachers.length > 0)) return res.status(404).json({ message: 'Преподаватель с указанным email не найден.' })
+            res.status(200).json(possibleTeachers[0])
+
+            //if (topics) return res.status(200).json(topics)
+            //return res.status(502)
+        } catch (error) {
+            console.error(`Ошибка в контроллере verifyTeacher: ${error}.`)
+        }
+    }
+
+    async getActivitiesForTeacherWithoutThemes(req, res, next) {
+        try {
+            const { code } = req.query;
+            console.log(code)
+            //if (topics) return res.status(200).json(topics)
+            //return res.status(502)
+        } catch (error) {
+            console.error(`Ошибка в контроллере verifyTeacher: ${error}.`)
+        }
+    }
 }
 module.exports = new Controllers();

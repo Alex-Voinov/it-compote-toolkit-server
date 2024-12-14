@@ -106,6 +106,7 @@ class HooliHopService {
         teacherId
     ) => {
         try {
+            console.log(123, teacherId)
             const activitiesTeacher = await axiosInstance.get(
                 "GetEdUnits",
                 {

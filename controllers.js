@@ -98,11 +98,11 @@ class Controllers {
     async getActivitiesForTeacherWithoutThemes(req, res, next) {
         try {
             const { teacherId } = req.query;
-            if(!teacherId) return res.status(403).send('Нет Id преподавателя')
+            if (!teacherId || teacherId === 'undefined') return res.status(403).send('Нет Id преподавателя')
             const findActivities = await hooliHopService.getActivitiesForTeacherWithoutThemes(teacherId);
-            res.status(200).json(findActivities) 
+            res.status(200).json(findActivities)
         } catch (error) {
-            console.error(`Ошибка в контроллере verifyTeacher: ${error}.`)
+            console.error(`Ошибка в контроллере getActivitiesForTeacherWithoutThemes: ${error}.`)
         }
     }
 }

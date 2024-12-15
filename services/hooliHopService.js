@@ -139,9 +139,52 @@ class HooliHopService {
             }).filter(
                 lesson => lesson.Days.length
             ) // оставляем уроки, по которым нет описания в удобнов формате
+            // На этом этапе у нас есть убдобный объект активносетей, но без учеников
+            const studentsByGroupsRequests = posibleLessonsFormated.filter(group => group.Type === 'Group').map(group => this.getStudentsByIdGroup(group.Id));
+            const studentsByGroups = (await Promise.all(studentsByGroupsRequests)).map(
+                res => res.data.EdUnitStudents.map(
+                    studentData => {
+                        return {
+                            Id: studentData.StudentClientId,
+                            Name: studentData.StudentName,
+                        }
+                    }
+                ).reduce((obj, item) => {
+                    obj[item.Id] = item.Name;
+                    return obj;
+                }, {})
+            ) // Массив, каждый объект которого представляет группу: ключи CloientId Студентов, значения - их ФИО.
+            
+            const finallyData = posibleLessonsFormated.map(activity => {
+                if (activity.Type === 'Group') {
+                    const students = studentsByGroups.shift() // Берем данных об учениках группы
+                    return { ...activity, Students: students }
+                }
+                return activity
+            })
             return posibleLessonsFormated
         } catch (error) {
-            console.error('Error in Hooli-Hop service (getLastThems):', error.message);
+            console.error('Error in Hooli-Hop service (getActivitiesForTeacherWithoutThemes):', error.message);
+            throw error;
+        }
+    }
+
+    getStudentsByIdGroup = async (groupId) => {
+        try {
+            return axiosInstance.get(
+                "GetEdUnitStudents",
+                {
+                    params: {
+                        edUnitId: groupId,
+                        queryDays: true,
+                        edUnitTypes: 'Group',
+                        dateFrom: "2000-01-01",
+                        dateTo: "3000-01-01"
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in Hooli-Hop service (getStudentsByIdGroup):', error.message);
             throw error;
         }
     }

@@ -162,7 +162,7 @@ class HooliHopService {
                 }
                 return activity
             })
-            return posibleLessonsFormated
+            return finallyData
         } catch (error) {
             console.error('Error in Hooli-Hop service (getActivitiesForTeacherWithoutThemes):', error.message);
             throw error;

@@ -10,5 +10,6 @@ router.get('/get-topics-across-disciplines', Controllers.getTopicsAcrossDiscipli
 router.get('/get-activities-for-teacher-without-themes', checkCode, Controllers.getActivitiesForTeacherWithoutThemes);
 router.get('/pick-group', Controllers.pickGroup);
 router.get('/verify-teacher', Controllers.verifyTeacher)
+router.get('/fill-activity-data', checkCode, Controllers.fillActivityData)
 
 module.exports = router

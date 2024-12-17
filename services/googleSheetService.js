@@ -2,6 +2,13 @@ const axios = require('axios');
 const csvToArrayOfObjects = require('../utilities/csvToArrayOfObjects');
 require('dotenv').config();
 
+const { google } = require('googleapis');
+const credentials = require('../googleSheetKey.json'); // Укажите путь к JSON-файлу
+// Аутентификация
+const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets']
+});
 
 const googleGidData = [
     {
@@ -62,7 +69,6 @@ class GoogleSheetService {
     getTopicsAcrossDisciplines = async () => {
         try {
             const gidRequests = {};
-
             const promises = googleGidData.map(async data => {
                 const { gid, title } = data;
                 const SHEET_URL = `${process.env.GOOGLE_SHEET_URL}/export?format=csv&gid=${gid}`;
@@ -83,6 +89,24 @@ class GoogleSheetService {
 
         } catch (error) {
             console.error('Error in GoogleSheetService service (getTopicsAcrossDisciplines):', error.message);
+            throw error;
+        }
+    }
+    addRowToSheet = async (data) => {
+        try {
+            const sheets = google.sheets({ version: 'v4', auth });
+            // Добавление строки в конец таблицы
+            const response = await sheets.spreadsheets.values.append({
+                spreadsheetId: process.env.GOOGLE_SHEET_FEEDBACK_TEACHER_ID,
+                range: 'Лист1', // Укажите название листа
+                valueInputOption: 'RAW', // RAW — данные без автоформатирования, USER_ENTERED — с автоформатированием
+                resource: {
+                    values: [data], // Данные, которые нужно добавить (одномерный массив)
+                },
+            });
+            return response.data.updates.updatedRange;
+        } catch (error) {
+            console.error('Ошибка при добавлении строки:', error);
             throw error;
         }
     }

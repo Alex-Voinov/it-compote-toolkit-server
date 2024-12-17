@@ -105,5 +105,23 @@ class Controllers {
             console.error(`Ошибка в контроллере getActivitiesForTeacherWithoutThemes: ${error}.`)
         }
     }
+
+    async fillActivityData(req, res, next) {
+        try {
+            const { 
+                activityId,         // Id Активности (Мероприятия), к примеру, уроки по питону
+                date,               // День из выбранной активности
+                theme,              // Выбраная педагогом тема
+                individulComments,  // Объект ClientId студента - комментарий лично к нему, от педагога
+                generalComments,    // Основные комментарии об уроке: объекь название комментария - текст комментария
+                rates,               // Оценки от 1 до 10: объекь название шкалы - оценка
+                lecturer,            // Преподаватель заполневший активность {ClientId, FullName}
+            } = req.query;
+            await googleSheetService.addRowToSheet([1,2,3])
+            res.status(200).send('Ok')
+        } catch (error) {
+            console.error(`Ошибка в контроллере fillActivityData: ${error}.`)
+        }
+    }
 }
 module.exports = new Controllers();

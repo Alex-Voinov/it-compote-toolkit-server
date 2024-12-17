@@ -2,6 +2,7 @@ const hooliHopService = require("./services/hooliHopService");
 const googleSheetService = require("./services/googleSheetService");
 const { capitalize } = require('./utilities/strFunc')
 const defineLastThemes = require('./utilities/defineLastThemes')
+const formatDate = require('./utilities/datePerfectView')
 
 require('dotenv').config()
 
@@ -108,7 +109,7 @@ class Controllers {
 
     async fillActivityData(req, res, next) {
         try {
-            const { 
+            const {
                 activityId,         // Id Активности (Мероприятия), к примеру, уроки по питону
                 date,               // День из выбранной активности
                 theme,              // Выбраная педагогом тема
@@ -117,7 +118,22 @@ class Controllers {
                 rates,               // Оценки от 1 до 10: объекь название шкалы - оценка
                 lecturer,            // Преподаватель заполневший активность {ClientId, FullName}
             } = req.query;
-            await googleSheetService.addRowToSheet([1,2,3])
+
+            const rowForGoogleSheet = [
+                lecturer.FullName,
+                activityId,
+                date,
+                theme,
+                rates.completeness,
+                rates.satisfaction,
+                rates.Feelings,
+                rates.FeelingsStudent,
+                generalComments.positiveAspects,
+                generalComments.growthPoints,
+                generalComments.generalQuestions,
+                formatDate(new Date()),
+            ].map(value => value === undefined || value === '' ? '–' : value)
+            await googleSheetService.addRowToSheet(rowForGoogleSheet)
             res.status(200).send('Ok')
         } catch (error) {
             console.error(`Ошибка в контроллере fillActivityData: ${error}.`)

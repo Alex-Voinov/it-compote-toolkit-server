@@ -9,6 +9,7 @@ const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets']
 });
+const sheets = google.sheets({ version: 'v4', auth });
 
 const googleGidData = [
     {
@@ -94,7 +95,6 @@ class GoogleSheetService {
     }
     addRowToSheet = async (data) => {
         try {
-            const sheets = google.sheets({ version: 'v4', auth });
             // Добавление строки в конец таблицы
             const response = await sheets.spreadsheets.values.append({
                 spreadsheetId: process.env.GOOGLE_SHEET_FEEDBACK_TEACHER_ID,

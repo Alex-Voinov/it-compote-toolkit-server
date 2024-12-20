@@ -110,5 +110,46 @@ class GoogleSheetService {
             throw error;
         }
     }
+    updateActivityTable = async (rows) => {
+        try {
+            const titles = [
+                'Cсылка на группу',
+                'Дисциплина',
+                'Дата занятия',
+                'Время начала занятия',
+                'День недели',
+                'Группа',
+                'Ученик',
+                'Тип',
+                'Комната',
+            ]
+            const sheetName = 'Лист1'; // Название листа
+            const spreadsheetId = process.env.GOOGLE_SHEET_ZOOM_LESSONS;
+
+            // Очищаем таблицу, начиная с первой строки до 10000
+            await sheets.spreadsheets.values.clear({
+                spreadsheetId,
+                range: `${sheetName}!1:10000` // Указание диапазона
+            });
+
+            // Формируем данные для записи (сохраняем первую строку и добавляем новые строки)
+            const updatedData = [titles, ...rows];
+
+            // Записываем данные в таблицу
+            const response = await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: `${sheetName}!A1`, // Указываем начало диапазона
+                valueInputOption: 'RAW', // RAW — данные без автоформатирования
+                resource: {
+                    values: updatedData // Передаём массив данных
+                }
+            });
+
+            return response.data.updatedRange;
+        } catch (error) {
+            console.error('Ошибка при обновлении таблицы:', error);
+            throw error;
+        }
+    }
 }
 module.exports = new GoogleSheetService();

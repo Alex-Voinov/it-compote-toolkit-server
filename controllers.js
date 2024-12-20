@@ -107,6 +107,18 @@ class Controllers {
         }
     }
 
+    async updateActivityTable(req, res, next) {
+        try {
+            // Запрос на формирование всех активностей в hh
+            const allActivities = await hooliHopService.getAllActivitiesForZoomTable();
+            if (!allActivities || !allActivities.length) res.status(503).send('Не удалось сформировать список активностей, по данным хх')
+            await googleSheetService.updateActivityTable(allActivities)   
+            res.status(200).send(`Таблица обновлена успешно, записей загружено: ${allActivities.length}`)
+        } catch (error) {
+            console.error(`Ошибка в контроллере updateActivityTable: ${error}.`)
+        }
+    }
+
     async fillActivityData(req, res, next) {
         try {
             const {
@@ -133,7 +145,15 @@ class Controllers {
                 generalComments.generalQuestions,
                 formatDate(new Date()),
             ].map(value => value === undefined || value === '' ? '–' : value)
-            await googleSheetService.addRowToSheet(rowForGoogleSheet)
+            const appendRowInGoogleSheetReq = googleSheetService.addRowToSheet(rowForGoogleSheet)
+            const editCommentsInHH = hooliHopService.addThemesByDataActivities(
+                activityId,
+                theme,
+                date,
+                individulComments
+            );
+            await Promise.all([appendRowInGoogleSheetReq, editCommentsInHH])
+            console.log('ok')
             res.status(200).send('Ok')
         } catch (error) {
             console.error(`Ошибка в контроллере fillActivityData: ${error}.`)

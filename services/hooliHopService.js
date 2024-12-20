@@ -4,6 +4,8 @@ const isCopyExistInArray = require('../utilities/existDuplicate');
 const getCurrentDate = require('../utilities/currentDate');
 const defineLastThemes = require('../utilities/defineLastThemes');
 const calculateAge = require('../utilities/defineAge');
+const getWeekDates = require('../utilities/getWeekDates');
+const getDayOfWeek = require('../utilities/getDayOfWeek');
 require('dotenv').config();
 
 
@@ -13,6 +15,7 @@ const axiosInstance = axios.create({
         'authkey': process.env.HOOLI_HOP_API_KEY
     },
 });
+
 
 class HooliHopService {
     getStudent = async (studentData) => {
@@ -154,7 +157,7 @@ class HooliHopService {
                     return obj;
                 }, {})
             ) // Массив, каждый объект которого представляет группу: ключи CloientId Студентов, значения - их ФИО.
-            
+
             const finallyData = posibleLessonsFormated.map(activity => {
                 if (activity.Type === 'Group') {
                     const students = studentsByGroups.shift() // Берем данных об учениках группы
@@ -185,6 +188,113 @@ class HooliHopService {
             );
         } catch (error) {
             console.error('Error in Hooli-Hop service (getStudentsByIdGroup):', error.message);
+            throw error;
+        }
+    }
+    addThemesByDataActivities = async (
+        activityId,
+        theme,
+        date,
+        individulComments
+    ) => {
+        try {
+            // Для групповыз занятий
+            const requestsForAddedCommenst = []
+            for (let studentId in individulComments) {
+                const comment = individulComments[studentId] || ''
+                const finallyDescription = `*${theme}\n*\n*${comment}`
+                if (activityId && activityId != null && activityId != undefined && activityId != '') {
+                    console.log({
+                        Date: date,
+                        EdUnitId: activityId,
+                        StudentClientId: studentId,
+                        Description: finallyDescription
+                    })
+                    requestsForAddedCommenst.push(
+                        axiosInstance.post(
+                            "SetStudentPasses",
+                            {
+                                Date: date,
+                                EdUnitId: activityId,
+                                StudentClientId: studentId,
+                                Description: finallyDescription
+                            }
+                        ).catch(error => {
+                            console.error('Ошибка:', error.response ? error.response.data : error.message);
+                        })
+                    )
+                }
+            };
+            await Promise.all(requestsForAddedCommenst);
+        } catch (error) {
+            console.error('Error in Hooli-Hop service (addThemesByDataActivities):', error.message);
+            throw error;
+        }
+    }
+
+    getAllActivitiesForZoomTable = async () => {
+        try {
+            // Софрмировать список дат, по которым нужно получить активности
+            const mondayNumber = 0;
+            const sundayNumber = 6;
+            const dateList = getWeekDates();
+            const hhResponse = await axiosInstance.get(
+                "GetEdUnitStudents",
+                {
+                    params: {
+                        dateFrom: dateList[mondayNumber],
+                        dateTo: dateList[sundayNumber],
+                        take: 10000, // Максимальный лимит, в будущем, возможно, стоит увеличить
+                        queryDays: true // Для получения точных дат занятий
+                    }
+                }
+            );
+            if (!hhResponse || !hhResponse.data || !hhResponse.data.EdUnitStudents) throw new Error('No response from Holihop');
+            const activities = hhResponse.data.EdUnitStudents;
+            if (activities.length === 0) throw new Error('No response from Holihop');
+            const rows = [] // Массив, в котором будут накапливаться строк с данными для таблицы
+            // Получаем данные о студентах из групп, для будущего получения их имени
+            for (let activity of activities) {
+                // Тип активности
+                const typeActivitie = activity.EdUnitType;
+                // Zoom, в котором проводится занятие
+                const room = activity.EdUnitOfficeOrCompanyName
+                // Дисциплина 
+                const discipline = activity.EdUnitDiscipline
+                // Название занятия 
+                const name = activity.EdUnitName
+                const activityId = activity.EdUnitId
+                // Ссылка на занятие, формируется из patern + type + id
+                const link = `https://it-school.t8s.ru/Learner/${typeActivitie}/${activityId}`
+                // Время начала занятия
+                const statrTime = activity.BeginTime
+                // Даты, в которых активность проходила на этой неделе
+                const days = activity.Days.map(day => day.Date)
+                // Строка данных для вставкеи в гугл таблицу
+                if (days.length === 0) {
+                    console.log(`Активность ${activityId} не имеет данных о днях`)
+                    continue;
+                }
+                for (let day of days) {
+                    const dayOfWeek = getDayOfWeek(day)
+                    const student = typeActivitie === 'Group' ? activity.StudentName : name
+                    const rowForSheet = [
+                        link,           // ссылка на группу
+                        discipline,     // дисциплина
+                        day,            // дата занятия
+                        statrTime,      // время начала занятия
+                        dayOfWeek,      // день недели
+                        name,           // группа
+                        student,        // ученик
+                        typeActivitie,  // тип
+                        room,           // комната
+                    ]
+                    rows.push(rowForSheet)
+                }
+            }
+            return rows;
+        } catch (error) {
+            console.error('Error in Hooli-Hop service (getAllActivitiesForZoomTable):', error.message);
             throw error;
         }
     }

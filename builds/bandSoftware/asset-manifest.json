@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/study-group/static/css/main.c4d3eecc.css",
+    "main.js": "/study-group/static/js/main.bed98ef2.js",
+    "index.html": "/study-group/index.html",
+    "main.c4d3eecc.css.map": "/study-group/static/css/main.c4d3eecc.css.map",
+    "main.bed98ef2.js.map": "/study-group/static/js/main.bed98ef2.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c4d3eecc.css",
+    "static/js/main.bed98ef2.js"
+  ]
+}

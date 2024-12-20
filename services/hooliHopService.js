@@ -323,6 +323,9 @@ class HooliHopService {
             if (!possibleGroups.length) return []
             const possibleGroupId = possibleGroups.filter(group => group.StudentsCount < process.env.MAX_STUDENTS_IN_GROUP).map(group => group.Id)
             let studentsByIdGroupResponse = [];
+            // По каждой группе надо отправить запрос, если их больше 500 хх воспринимает это как дудос
+            // Поэтому начинаем отправлять запросы, через определенные интервалы времени
+            // Делаем по 20 запросов за 0.5 - 1 секунду
             const lazyReq = possibleGroupId.length > 500
             if (lazyReq) {
                 const amountBigStep = Math.ceil(possibleGroupId.length / 20)
@@ -351,6 +354,7 @@ class HooliHopService {
                     studentsByIdGroupResponse.push(...bufferResponses)
                 }
             }
+            // Обычная загрузка
             else {
                 const getStudentsByIdGroupPromises = possibleGroupId.map(groupId => {
                     return axiosInstance.get(
@@ -498,14 +502,54 @@ class HooliHopService {
                 return null
             }).filter(data => data !== null))
             const suitableGroups = []
+
+            // Дополнительно попросили добавить даты занятий, следующие пару строчек получают данные о времени
+            const possibleGroupRequests = []
+            const mondayNumber = 0;
+            const sundayNumber = 6;
+            const dateList = getWeekDates();
+
+            for (let groupId in groupIdToOverAge) possibleGroupRequests.push(
+                axiosInstance.get("GetEdUnitStudents", {
+                    params: {
+                        edUnitId: groupId,
+                        dateFrom: dateList[mondayNumber],
+                        dateTo: dateList[sundayNumber],
+                        queryDays: true,
+                    }
+                })
+            )
+            const overagePossibleGroups = await Promise.all(possibleGroupRequests);
+            const formatedGroupForDateTime = {}
+            for (let possibleGroup of overagePossibleGroups) {
+                const groupData = possibleGroup.data.EdUnitStudents[0]
+                const days = groupData.Days.map(day => day.Date)
+                if (!groupData || !days) continue
+                formatedGroupForDateTime[groupData.EdUnitId] = {
+                    startTime: groupData.BeginTime,
+                    weekday: days,
+                    weekdaysName: days.map(getDayOfWeek)
+                }
+            }
+            // цикл сверху сформировал formatedGroupForDateTime
+            // Пример:
+            // {
+            //     '32037': {
+            //         startTime: '12:40',
+            //             weekday: ['2024-12-22'],
+            //                 weekdaysName: ['воскресенье']
+            //     }
+            // }
             for (let groupId in groupIdToOverAge) {
                 const lastTheme = groupIdToLastTheme[groupId];
                 const overAge = groupIdToOverAge[groupId]
+                const datetime = formatedGroupForDateTime[groupId]
                 suitableGroups.push(
                     {
                         groupId,
                         overAge,
-                        lastTheme
+                        lastTheme,
+                        ...(datetime? datetime: {}) 
                     }
                 )
             }

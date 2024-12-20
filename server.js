@@ -5,22 +5,30 @@ const router = require('./router')
 const path = require('path');
 
 const corsOptions = {
-    origin: 'http://localhost:3000',//process.env.CLIENT_URL,
+    origin: process.env.CLIENT_URL,
     credentials: true,
 };
 
-let reqForSGrup = 0;
+
 
 const app = express();
 console.log('Открыты порты на прослушивание')
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'build')));
 
+// Раздача статических файлов
+app.use('/study-group', express.static(path.join(__dirname, 'builds', 'bandSoftware')));
+app.use('/', express.static(path.join(__dirname, 'builds', 'webForm')));
+
+// API
 app.use('/api', router);
-app.get('*', (req, res) => {
-    console.log('Колличество запросов к платформе по подбору групп:', reqForSGrup++)
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+
+// Роут для React-приложения
+app.get('/study-group/*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'builds', 'bandSoftware', 'index.html'));
+});
+app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'builds', 'webForm', 'index.html'));
 });
 
 

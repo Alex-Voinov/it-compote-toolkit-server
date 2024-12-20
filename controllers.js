@@ -112,10 +112,13 @@ class Controllers {
             // Запрос на формирование всех активностей в hh
             const allActivities = await hooliHopService.getAllActivitiesForZoomTable();
             if (!allActivities || !allActivities.length) res.status(503).send('Не удалось сформировать список активностей, по данным хх')
-            await googleSheetService.updateActivityTable(allActivities)   
-            res.status(200).send(`Таблица обновлена успешно, записей загружено: ${allActivities.length}`)
+            await googleSheetService.updateActivityTable(allActivities)
+            res.status(200).send(`Таблица обновлена успешно.
+Записей загружено: ${allActivities.length}.
+Ссылка для просмотра: https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ZOOM_LESSONS}/`)
         } catch (error) {
             console.error(`Ошибка в контроллере updateActivityTable: ${error}.`)
+            res.status(400).send(error.message ? error.message : 'неизвестная ошибка')
         }
     }
 

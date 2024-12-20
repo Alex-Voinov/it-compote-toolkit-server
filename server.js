@@ -5,7 +5,7 @@ const router = require('./router')
 const path = require('path');
 
 const corsOptions = {
-    origin: 'http://localhost:5173',//process.env.CLIENT_URL,
+    origin: 'http://localhost:3000',//process.env.CLIENT_URL,
     credentials: true,
 };
 

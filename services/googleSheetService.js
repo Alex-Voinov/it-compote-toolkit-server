@@ -123,7 +123,7 @@ class GoogleSheetService {
                 'Тип',
                 'Комната',
             ]
-            const sheetName = 'Лист1'; // Название листа
+            const sheetName = 'Выгрузка'; // Название листа
             const spreadsheetId = process.env.GOOGLE_SHEET_ZOOM_LESSONS;
 
             // Очищаем таблицу, начиная с первой строки до 10000

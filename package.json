@@ -6,12 +6,18 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "googleapis": "^144.0.0",
-    "papaparse": "^5.4.1"
+    "node-fetch": "^3.3.2",
+    "papaparse": "^5.4.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
   },
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon index.js"
+  },
+  "overrides": {
+    "node-fetch": "^3.3.2",
+    "whatwg-url": "^11.0.0"
   }
 }

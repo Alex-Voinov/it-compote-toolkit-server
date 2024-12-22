@@ -1,6 +1,5 @@
 const axios = require('axios');
 const csvToArrayOfObjects = require('../utilities/csvToArrayOfObjects');
-require('dotenv').config();
 
 const { google } = require('googleapis');
 const credentials = require('../googleSheetKey.json'); // Укажите путь к JSON-файлу
@@ -81,7 +80,7 @@ class GoogleSheetService {
                         el => el && !el.toLowerCase().includes('тема для holli hop')
                     )
                 } catch (error) {
-                    console.error(`Ошибка запроса к таблице ${title} по gid: ${gid}`);
+                    logger.error(`Ошибка запроса к таблице ${title} по gid: ${gid}`);
                 }
             });
 
@@ -89,7 +88,7 @@ class GoogleSheetService {
             return gidRequests;
 
         } catch (error) {
-            console.error('Error in GoogleSheetService service (getTopicsAcrossDisciplines):', error.message);
+            logger.error('Error in GoogleSheetService service (getTopicsAcrossDisciplines):', error.message);
             throw error;
         }
     }
@@ -106,7 +105,7 @@ class GoogleSheetService {
             });
             return response.data.updates.updatedRange;
         } catch (error) {
-            console.error('Ошибка при добавлении строки:', error);
+            logger.error('Ошибка при добавлении строки:', error);
             throw error;
         }
     }
@@ -147,7 +146,7 @@ class GoogleSheetService {
 
             return response.data.updatedRange;
         } catch (error) {
-            console.error('Ошибка при обновлении таблицы:', error);
+            logger.error('Ошибка при обновлении таблицы:', error);
             throw error;
         }
     }

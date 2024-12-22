@@ -4,7 +4,6 @@ const { capitalize } = require('./utilities/strFunc')
 const defineLastThemes = require('./utilities/defineLastThemes')
 const formatDate = require('./utilities/datePerfectView')
 
-require('dotenv').config()
 
 class Controllers {
     async getUser(req, res, next) {
@@ -30,7 +29,7 @@ class Controllers {
             }
             res.status(422)
         } catch (error) {
-            console.error(`Ошибка в контроллере getUser: ${error}.`)
+            logger.error(`Ошибка в контроллере getUser: ${error}.`)
         }
     }
     async getDisciplines(req, res, next) {
@@ -39,7 +38,7 @@ class Controllers {
             if (response.data.Disciplines) return res.status(200).json(response.data)
             return res.status(502)
         } catch (error) {
-            console.error(`Ошибка в контроллере getDisciplines: ${error}.`)
+            logger.error(`Ошибка в контроллере getDisciplines: ${error}.`)
         }
     }
     async getLastThems(req, res, next) {
@@ -52,11 +51,11 @@ class Controllers {
                     defineLastThemes(coursesData, true)
                 )
             } else {
-                console.log('Данных о курсе не найденно')
+                logger.log('Данных о курсе не найденно')
             }
             return res.status(502)
         } catch (error) {
-            console.error(`Ошибка в контроллере getLastThems: ${error}.`)
+            logger.error(`Ошибка в контроллере getLastThems: ${error}.`)
         }
     }
     async pickGroup(req, res, next) {
@@ -65,7 +64,7 @@ class Controllers {
             const suitableGroups = await hooliHopService.pickGroup(level, discipline, age, lastTheme)
             return res.status(200).json({ suitableGroups: suitableGroups })
         } catch (error) {
-            console.error(`Ошибка в контроллере pickGroup: ${error}.`)
+            logger.error(`Ошибка в контроллере pickGroup: ${error}.`)
             res.status(400).json(error)
         }
     }
@@ -75,7 +74,7 @@ class Controllers {
             if (topics) return res.status(200).json(topics)
             return res.status(502)
         } catch (error) {
-            console.error(`Ошибка в контроллере getTopicsAcrossDisciplines: ${error}.`)
+            logger.error(`Ошибка в контроллере getTopicsAcrossDisciplines: ${error}.`)
         }
     }
 
@@ -92,7 +91,7 @@ class Controllers {
             //if (topics) return res.status(200).json(topics)
             //return res.status(502)
         } catch (error) {
-            console.error(`Ошибка в контроллере verifyTeacher: ${error}.`)
+            logger.error(`Ошибка в контроллере verifyTeacher: ${error}.`)
         }
     }
 
@@ -103,7 +102,7 @@ class Controllers {
             const findActivities = await hooliHopService.getActivitiesForTeacherWithoutThemes(teacherId);
             res.status(200).json(findActivities)
         } catch (error) {
-            console.error(`Ошибка в контроллере getActivitiesForTeacherWithoutThemes: ${error}.`)
+            logger.error(`Ошибка в контроллере getActivitiesForTeacherWithoutThemes: ${error}.`)
         }
     }
 
@@ -117,7 +116,7 @@ class Controllers {
 Записей загружено: ${allActivities.length}.
 Ссылка для просмотра: https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ZOOM_LESSONS}/`)
         } catch (error) {
-            console.error(`Ошибка в контроллере updateActivityTable: ${error}.`)
+            logger.error(`Ошибка в контроллере updateActivityTable: ${error}.`)
             res.status(400).send(error.message ? error.message : 'неизвестная ошибка')
         }
     }
@@ -156,10 +155,10 @@ class Controllers {
                 individulComments
             );
             await Promise.all([appendRowInGoogleSheetReq, editCommentsInHH])
-            console.log('ok')
+            logger.log('ok')
             res.status(200).send('Ok')
         } catch (error) {
-            console.error(`Ошибка в контроллере fillActivityData: ${error}.`)
+            logger.error(`Ошибка в контроллере fillActivityData: ${error}.`)
         }
     }
 }

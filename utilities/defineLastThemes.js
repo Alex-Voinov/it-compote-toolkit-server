@@ -1,6 +1,3 @@
-require('dotenv').config();
-
-
 // Функция, создающая из всех дисциплин ученика объект 
 // дисциплина - последняя тема по ней
 const defineLastThemes = (coursesData, checkPass = false) => {

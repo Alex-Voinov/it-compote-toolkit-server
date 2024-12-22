@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('../logger');
 const countArrayElementsInObject = require('../utilities/bestCoincidence')
 const isCopyExistInArray = require('../utilities/existDuplicate');
 const getCurrentDate = require('../utilities/currentDate');
@@ -6,7 +7,6 @@ const defineLastThemes = require('../utilities/defineLastThemes');
 const calculateAge = require('../utilities/defineAge');
 const getWeekDates = require('../utilities/getWeekDates');
 const getDayOfWeek = require('../utilities/getDayOfWeek');
-require('dotenv').config();
 
 
 const axiosInstance = axios.create({
@@ -55,7 +55,7 @@ class HooliHopService {
             }
             return bestCoincidence;
         } catch (error) {
-            console.error('Error in Hooli-Hop service (getStudent):', error.message);
+            logger.error('Error in Hooli-Hop service (getStudent):', error.message);
             throw error;
         }
     }
@@ -63,7 +63,7 @@ class HooliHopService {
         try {
             return await axiosInstance.get("GetDisciplines");
         } catch (error) {
-            console.error('Error in Hooli-Hop service (getDisciplines):', error.message);
+            logger.error('Error in Hooli-Hop service (getDisciplines):', error.message);
             throw error;
         }
     }
@@ -79,7 +79,7 @@ class HooliHopService {
                 }
             );
         } catch (error) {
-            console.error('Error in Hooli-Hop service (getTeacher):', error.message);
+            logger.error('Error in Hooli-Hop service (getTeacher):', error.message);
             throw error;
         }
     }
@@ -100,7 +100,7 @@ class HooliHopService {
                 }
             );
         } catch (error) {
-            console.error('Error in Hooli-Hop service (getLastThems):', error.message);
+            logger.error('Error in Hooli-Hop service (getLastThems):', error.message);
             throw error;
         }
     }
@@ -167,7 +167,7 @@ class HooliHopService {
             })
             return finallyData
         } catch (error) {
-            console.error('Error in Hooli-Hop service (getActivitiesForTeacherWithoutThemes):', error.message);
+            logger.error('Error in Hooli-Hop service (getActivitiesForTeacherWithoutThemes):', error.message);
             throw error;
         }
     }
@@ -187,7 +187,7 @@ class HooliHopService {
                 }
             );
         } catch (error) {
-            console.error('Error in Hooli-Hop service (getStudentsByIdGroup):', error.message);
+            logger.error('Error in Hooli-Hop service (getStudentsByIdGroup):', error.message);
             throw error;
         }
     }
@@ -204,7 +204,7 @@ class HooliHopService {
                 const comment = individulComments[studentId] || ''
                 const finallyDescription = `*${theme}\n*\n*${comment}`
                 if (activityId && activityId != null && activityId != undefined && activityId != '') {
-                    console.log({
+                    logger.log({
                         Date: date,
                         EdUnitId: activityId,
                         StudentClientId: studentId,
@@ -220,14 +220,14 @@ class HooliHopService {
                                 Description: finallyDescription
                             }
                         ).catch(error => {
-                            console.error('Ошибка:', error.response ? error.response.data : error.message);
+                            logger.error('Ошибка:', error.response ? error.response.data : error.message);
                         })
                     )
                 }
             };
             await Promise.all(requestsForAddedCommenst);
         } catch (error) {
-            console.error('Error in Hooli-Hop service (addThemesByDataActivities):', error.message);
+            logger.error('Error in Hooli-Hop service (addThemesByDataActivities):', error.message);
             throw error;
         }
     }
@@ -272,7 +272,7 @@ class HooliHopService {
                 const days = activity.Days.map(day => day.Date)
                 // Строка данных для вставкеи в гугл таблицу
                 if (days.length === 0) {
-                    console.log(`Активность ${activityId} не имеет данных о днях`)
+                    logger.log(`Активность ${activityId} не имеет данных о днях`)
                     continue;
                 }
                 for (let day of days) {
@@ -294,7 +294,7 @@ class HooliHopService {
             }
             return rows;
         } catch (error) {
-            console.error('Error in Hooli-Hop service (getAllActivitiesForZoomTable):', error.message);
+            logger.error('Error in Hooli-Hop service (getAllActivitiesForZoomTable):', error.message);
             throw error;
         }
     }
@@ -555,7 +555,7 @@ class HooliHopService {
             }
             return suitableGroups
         } catch (error) {
-            console.error('Error in Hooli-Hop service (pickGroup):', error.message);
+            logger.error('Error in Hooli-Hop service (pickGroup):', error.message);
             throw error;
         }
     }

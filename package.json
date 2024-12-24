@@ -15,9 +15,5 @@
   },
   "scripts": {
     "dev": "nodemon index.js"
-  },
-  "overrides": {
-    "node-fetch": "^3.3.2",
-    "whatwg-url": "^11.0.0"
   }
 }

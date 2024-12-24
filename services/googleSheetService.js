@@ -3,6 +3,7 @@ const csvToArrayOfObjects = require('../utilities/csvToArrayOfObjects');
 
 const { google } = require('googleapis');
 const credentials = require('../googleSheetKey.json'); // Укажите путь к JSON-файлу
+const googleGidData = require('../utilities/googleGidData');
 // Аутентификация
 const auth = new google.auth.GoogleAuth({
     credentials,
@@ -10,60 +11,6 @@ const auth = new google.auth.GoogleAuth({
 });
 const sheets = google.sheets({ version: 'v4', auth });
 
-const googleGidData = [
-    {
-        gid: 0,
-        title: 'Информатика Junior (Scratch компьютерная грамотность)',
-    },
-    {
-        gid: 1134158828,
-        title: 'Scratch математика',
-    },
-    {
-        gid: 1756260387,
-        title: 'Город программистов',
-    },
-    {
-        gid: 903653536,
-        title: 'Город программистов Джуниор',
-    },
-    {
-        gid: 1344626620,
-        title: 'Python GameDev (Разработка 2D-игр 1 ступень)',
-    },
-    {
-        gid: 1786651336,
-        title: 'Python GameDev (Разработка 2D и 3D-игр 2 ступень)',
-    },
-    {
-        gid: 644508222,
-        title: 'Программирование Python не игры',
-    },
-    {
-        gid: 777535457,
-        title: 'Web-программирование (1 ступень frontend)',
-    },
-    {
-        gid: 439500914,
-        title: 'Web-программирование (2 ступень backend)',
-    },
-    {
-        gid: 1702003797,
-        title: 'Графический дизайн',
-    },
-    {
-        gid: 1012441125,
-        title: 'Web-дизайн',
-    },
-    {
-        gid: 628110729,
-        title: '3D-моделирование (Blender)',
-    },
-    {
-        gid: 492897619,
-        title: ' 3D-моделирование 2 год',
-    },
-]
 
 class GoogleSheetService {
     getTopicsAcrossDisciplines = async () => {

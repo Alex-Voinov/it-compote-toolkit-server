@@ -87,9 +87,6 @@ class Controllers {
             const possibleTeachers = HHResponse?.data?.Teachers
             if (!(possibleTeachers && possibleTeachers.length > 0)) return res.status(404).json({ message: 'Преподаватель с указанным email не найден.' })
             res.status(200).json(possibleTeachers[0])
-
-            //if (topics) return res.status(200).json(topics)
-            //return res.status(502)
         } catch (error) {
             logger.error(`Ошибка в контроллере verifyTeacher: ${error}.`)
         }

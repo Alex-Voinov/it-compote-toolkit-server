@@ -128,4 +128,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# JSON файл для феривикации в гугл апи таблицах 
 googleSheetKey.json
+
+logs

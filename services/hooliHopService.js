@@ -204,7 +204,7 @@ class HooliHopService {
                 const comment = individulComments[studentId] || ''
                 const finallyDescription = `*${theme}\n*\n*${comment}`
                 if (activityId && activityId != null && activityId != undefined && activityId != '') {
-                    logger.log({
+                    logger.info({
                         Date: date,
                         EdUnitId: activityId,
                         StudentClientId: studentId,
@@ -272,7 +272,7 @@ class HooliHopService {
                 const days = activity.Days.map(day => day.Date)
                 // Строка данных для вставкеи в гугл таблицу
                 if (days.length === 0) {
-                    logger.log(`Активность ${activityId} не имеет данных о днях`)
+                    logger.info(`Активность ${activityId} не имеет данных о днях`)
                     continue;
                 }
                 for (let day of days) {

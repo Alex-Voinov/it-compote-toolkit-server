@@ -4,6 +4,7 @@ const csvToArrayOfObjects = require('../utilities/csvToArrayOfObjects');
 const { google } = require('googleapis');
 const credentials = require('../googleSheetKey.json'); // Укажите путь к JSON-файлу
 const googleGidData = require('../utilities/googleGidData');
+const logger = require('../logger');
 // Аутентификация
 const auth = new google.auth.GoogleAuth({
     credentials,

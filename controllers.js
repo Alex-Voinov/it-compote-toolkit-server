@@ -2,7 +2,8 @@ const hooliHopService = require("./services/hooliHopService");
 const googleSheetService = require("./services/googleSheetService");
 const { capitalize } = require('./utilities/strFunc')
 const defineLastThemes = require('./utilities/defineLastThemes')
-const formatDate = require('./utilities/datePerfectView')
+const formatDate = require('./utilities/datePerfectView');
+const logger = require("./logger");
 
 
 class Controllers {

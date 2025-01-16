@@ -17,6 +17,8 @@ const axiosInstance = axios.create({
 });
 
 
+
+
 class HooliHopService {
     getStudent = async (studentData) => {
         try {
@@ -120,51 +122,71 @@ class HooliHopService {
                     }
                 }
             );
-            const posibleLessons = activitiesTeacher.data.EdUnits;
+            const posibleLessons = activitiesTeacher.data.EdUnits; // Активности педагога
             if (!posibleLessons) return []
-            const posibleLessonsWithDay = posibleLessons.filter(lesson => lesson.Days.length > 0) // Оставляем только уроки с информацией о днях
-            const posibleLessonsFormated = posibleLessonsWithDay.map(lesson => {
+            const posibleLessonsWithDayIndividual = posibleLessons.filter(
+                lesson => lesson.Days.length > 0 && lesson.Type === 'Individual'
+            ) // Оставляем только индивидуальные активности с информацией о днях
+            const posibleLessonsWithDayGroup = posibleLessons.filter(lesson => lesson.Type === 'Group') // Получили группы, теперь нужно залезть в учеников в них
+            const studentInPosibleLessonsWithDayGroupResponse = await Promise.all(
+                posibleLessonsWithDayGroup.map(
+                    group => this.getStudentsByIdGroup(group.Id)
+                )
+            ) // Студенты в группах педагога
+            const studentInPosibleLessonsWithDayGroup = studentInPosibleLessonsWithDayGroupResponse.map(res => res.data.EdUnitStudents)
+            const accGroupDayWithoutThemes = {}
+            for (let students of studentInPosibleLessonsWithDayGroup) { // Проходимся по ученикам в группе
+                if (!Array.isArray(students) || !students.length > 0) continue;
+                const setIdNames = students.reduce((acc, student) => {
+                    acc[student.StudentClientId] = student.StudentName
+                    return acc
+                }, {})
+                const student = students[0];    // Берем первого попавшегося в группе, првоеряем по нему всю группу, т.к. если группе оставляли комментарии они попали во всех учеников
+                const dayWithoutComment = student.Days.filter( // Находи дни без комментариев
+                    day => !day.Description || day.Description.length === 0
+                )
+                if (dayWithoutComment.length > 0) accGroupDayWithoutThemes[student.EdUnitId] = {
+                    Days: dayWithoutComment.map(day => day.Date),
+                    Students: setIdNames,
+                    Name: student.EdUnitName,
+                    Discipline: student.EdUnitDiscipline
+                }
+            }
+            // На этом этапе у нас есть accGroupDayWithoutThemes - объект полезной информации по группам, состоящий из
+            // '29506': {                            id группы
+            //     Days: [                           дни без комментариев
+            //     '2025-01-18', '2025-01-25',        
+            //     '2025-02-01', '2025-02-08',
+            //     '2025-02-15', '2025-02-22',
+            //     '2025-03-01', '2025-03-08',
+            //     '2025-03-15', '2025-03-22'
+            //     ],
+            //     Students: {
+            //     '1746': 'Костащук Михаил',
+            //     '4158': 'Безе Сергей Игоревич',
+            //     '4206': 'Губайдулина Татьяна Юрьевна',
+            //     '4370': 'Тетерина Александра Михайловна'
+            //     },
+            //     Name: 'WEB-2-GROUP сайт магазина',
+            //     Discipline: 'Web-программирование (2 ступень backend)'
+            // }
+            const posibleLessonsFormated = posibleLessonsWithDayIndividual.map(lesson => {
                 return {
                     Id: lesson.Id,
-                    Type: lesson.Type,
                     Name: lesson.Name,
                     Discipline: lesson.Discipline,
                     Days: lesson.Days.filter(
                         day => !day.Description || day.Description.length === 0
-                    ).map(
-                        day => {
-                            return {
-                                Date: day.Date,
-                                Description: day.Date
-                            }
-                        })
+                    )
                 }
             }).filter(
                 lesson => lesson.Days.length
-            ) // оставляем уроки, по которым нет описания в удобнов формате
-            // На этом этапе у нас есть убдобный объект активносетей, но без учеников
-            const studentsByGroupsRequests = posibleLessonsFormated.filter(group => group.Type === 'Group').map(group => this.getStudentsByIdGroup(group.Id));
-            const studentsByGroups = (await Promise.all(studentsByGroupsRequests)).map(
-                res => res.data.EdUnitStudents.map(
-                    studentData => {
-                        return {
-                            Id: studentData.StudentClientId,
-                            Name: studentData.StudentName,
-                        }
-                    }
-                ).reduce((obj, item) => {
-                    obj[item.Id] = item.Name;
-                    return obj;
-                }, {})
-            ) // Массив, каждый объект которого представляет группу: ключи CloientId Студентов, значения - их ФИО.
+            ) // Оставляем индивидуальные уроки, по которым нет описания. В удобном формате
 
-            const finallyData = posibleLessonsFormated.map(activity => {
-                if (activity.Type === 'Group') {
-                    const students = studentsByGroups.shift() // Берем данных об учениках группы
-                    return { ...activity, Students: students }
-                }
-                return activity
-            })
+            const finallyData = {
+                groupData: accGroupDayWithoutThemes,
+                individualData: posibleLessonsFormated,
+            }
             return finallyData
         } catch (error) {
             logger.error('Error in Hooli-Hop service (getActivitiesForTeacherWithoutThemes):', error.message);
@@ -195,38 +217,42 @@ class HooliHopService {
         activityId,
         theme,
         date,
-        individulComments
+        individulComments,
+        attendance
     ) => {
         try {
             // Для групповыз занятий
-            const requestsForAddedCommenst = []
-            for (let studentId in individulComments) {
-                const comment = individulComments[studentId] || ''
-                const finallyDescription = `*${theme}\n*\n*${comment}`
-                if (activityId && activityId != null && activityId != undefined && activityId != '') {
-                    logger.info({
-                        Date: date,
-                        EdUnitId: activityId,
-                        StudentClientId: studentId,
-                        Description: finallyDescription
-                    })
-                    requestsForAddedCommenst.push(
-                        axiosInstance.post(
-                            "SetStudentPasses",
-                            {
-                                Date: date,
-                                EdUnitId: activityId,
-                                StudentClientId: studentId,
-                                Description: finallyDescription
-                            }
-                        ).catch(error => {
-                            logger.error('Ошибка:', error.response ? error.response.data : error.message);
-                        })
-                    )
+            // Преобразуем объект комментариев в массив параметров
+            const data = Object.entries(individulComments).map(([studentId, comment]) => ({
+                Date: date,
+                EdUnitId: activityId,
+                StudentClientId: studentId,
+                Description: `*${theme}\n*\n*${comment}`,
+                pass: studentId in attendance ? studentId in attendance : false,
+            }))
+
+            console.log(data)
+            const response = await axiosInstance.post(
+                "SetStudentPasses",
+                data,
+                {
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
                 }
-            };
-            await Promise.all(requestsForAddedCommenst);
+            );
         } catch (error) {
+            if (error.response) {
+                // Сервер ответил с кодом ошибки
+                logger.error("Ошибка сервера:", error.response.status);
+                logger.error("Ответ от сервера:", error.response.data);
+            } else if (error.request) {
+                // Запрос был сделан, но не получен ответ
+                logger.error("Ошибка запроса:", error.request);
+            } else {
+                // Произошла ошибка при настройке запроса
+                logger.error("Ошибка настройки запроса:", error.message);
+            }
             logger.error('Error in Hooli-Hop service (addThemesByDataActivities):', error.message);
             throw error;
         }
@@ -549,7 +575,7 @@ class HooliHopService {
                         groupId,
                         overAge,
                         lastTheme,
-                        ...(datetime? datetime: {}) 
+                        ...(datetime ? datetime : {})
                     }
                 )
             }

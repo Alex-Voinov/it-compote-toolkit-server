@@ -52,7 +52,7 @@ class Controllers {
                     defineLastThemes(coursesData, true)
                 )
             } else {
-                logger.log('Данных о курсе не найденно')
+                logger.info('Данных о курсе не найденно')
             }
             return res.status(502)
         } catch (error) {
@@ -129,14 +129,15 @@ class Controllers {
                 generalComments,    // Основные комментарии об уроке: объекь название комментария - текст комментария
                 rates,               // Оценки от 1 до 10: объекь название шкалы - оценка
                 lecturer,            // Преподаватель заполневший активность {ClientId, FullName}
+                attendance,          // Посещаемость учеников {ClientId, true/false} (если id нет - ученика не было)
             } = req.query;
-
+            if (!activityId || !date || !theme  || !generalComments || !rates || !lecturer)
+                return res.status(400).send('Неверный формат ввода данных')
             const rowForGoogleSheet = [
                 lecturer.FullName,
                 activityId,
                 date,
                 theme,
-                rates.completeness,
                 rates.satisfaction,
                 rates.Feelings,
                 rates.FeelingsStudent,
@@ -150,13 +151,14 @@ class Controllers {
                 activityId,
                 theme,
                 date,
-                individulComments
+                individulComments,
+                attendance
             );
             await Promise.all([appendRowInGoogleSheetReq, editCommentsInHH])
-            logger.log('ok')
             res.status(200).send('Ok')
         } catch (error) {
             logger.error(`Ошибка в контроллере fillActivityData: ${error}.`)
+            res.status(500).send(error)
         }
     }
 }

@@ -177,15 +177,47 @@ class HooliHopService {
                     Discipline: lesson.Discipline,
                     Days: lesson.Days.filter(
                         day => !day.Description || day.Description.length === 0
-                    )
+                    ).map(day => day.Date)
                 }
             }).filter(
                 lesson => lesson.Days.length
             ) // Оставляем индивидуальные уроки, по которым нет описания. В удобном формате
 
+
+            const clientsByIndividualLessonsRequest = posibleLessonsFormated.map(
+                lesson => axiosInstance.get(
+                    "GetEdUnitStudents",
+                    {
+                        params: {
+                            edUnitId: lesson.Id,
+                            edUnitTypes: 'Individual',
+                            dateFrom: process.env.START_DATE_FOR_SEARCH,
+                            dateTo: getCurrentDate()
+                        }
+                    }
+                )
+            );
+            const clientsByIndividualLessons = (await Promise.all(clientsByIndividualLessonsRequest)).map(res => {
+                const results = res.data.EdUnitStudents
+                if (!(results && results.length > 0)) return;
+                const findStudent = results[0]
+                console.log(findStudent)
+                return {
+                    [findStudent.EdUnitId]: {
+                        [findStudent.StudentClientId]: findStudent.StudentName
+                    }
+                }
+            }).reduce((acc, obj) => {
+                const [key, value] = Object.entries(obj)[0];
+                acc[key] = value;
+                return acc;
+            }, {});
+
+            const posibleLessonsFormatedWithClientID = posibleLessonsFormated.map(les => { return { ...les, Students: clientsByIndividualLessons[les.Id] } })
+
             const finallyData = {
                 groupData: accGroupDayWithoutThemes,
-                individualData: posibleLessonsFormated,
+                individualData: posibleLessonsFormatedWithClientID,
             }
             return finallyData
         } catch (error) {
@@ -231,7 +263,6 @@ class HooliHopService {
                 pass: studentId in attendance ? studentId in attendance : false,
             }))
 
-            console.log(data)
             const response = await axiosInstance.post(
                 "SetStudentPasses",
                 data,

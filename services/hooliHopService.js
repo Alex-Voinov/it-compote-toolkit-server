@@ -142,8 +142,8 @@ class HooliHopService {
                     return acc
                 }, {})
                 const student = students[0];    // Берем первого попавшегося в группе, првоеряем по нему всю группу, т.к. если группе оставляли комментарии они попали во всех учеников
-                const dayWithoutComment = student.Days.filter( // Находи дни без комментариев
-                    day => !day.Description || day.Description.length === 0
+                const dayWithoutComment = student.Days.filter( // Находиь дни без комментариев, в прошлом времени
+                    day => (new Date(day.Date) <= new Date()) && (!day.Description || day.Description.length === 0)
                 )
                 if (dayWithoutComment.length > 0) accGroupDayWithoutThemes[student.EdUnitId] = {
                     Days: dayWithoutComment.map(day => day.Date),
@@ -260,7 +260,7 @@ class HooliHopService {
                 EdUnitId: activityId,
                 StudentClientId: studentId,
                 Description: `*${theme}\n*\n*${comment}`,
-                pass: studentId in attendance ? studentId in attendance : false,
+                pass: studentId in attendance ? !(studentId in attendance) : true,
             }))
 
             const response = await axiosInstance.post(

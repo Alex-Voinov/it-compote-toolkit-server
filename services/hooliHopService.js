@@ -134,7 +134,7 @@ class HooliHopService {
                 )
             ) // Студенты в группах педагога
             const studentInPosibleLessonsWithDayGroup = studentInPosibleLessonsWithDayGroupResponse.map(res => res.data.EdUnitStudents)
-            const accGroupDayWithoutThemes = {}
+            const accGroupDayWithoutThemes = []
             for (let students of studentInPosibleLessonsWithDayGroup) { // Проходимся по ученикам в группе
                 if (!Array.isArray(students) || !students.length > 0) continue;
                 const setIdNames = students.reduce((acc, student) => {
@@ -142,24 +142,29 @@ class HooliHopService {
                     return acc
                 }, {})
                 const student = students[0];    // Берем первого попавшегося в группе, првоеряем по нему всю группу, т.к. если группе оставляли комментарии они попали во всех учеников
-                const dayWithoutComment = student.Days.filter( // Находим дни без комментариев, в прошлом времени
-                    day => {                                   
-                        console.log(day)    
-                        return (new Date(day.Date) <= new Date())               // День уже наступил
+                const dayWithoutComment = student.Days.filter(                  // Находим дни без комментариев, в прошлом времени
+                    day => (new Date(day.Date) <= new Date())                  // День уже наступил
                         && (!day.Description || day.Description.length === 0)   // Но в нём ещё нет комментария
-                        &&  !(day.Pass ===0 && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
-                    }
+                        && !(day.Pass === 0 && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
                 )
-                if (dayWithoutComment.length > 0) accGroupDayWithoutThemes[student.EdUnitId] = {
+                if (dayWithoutComment.length > 0) accGroupDayWithoutThemes.push({
+                    Id: student.EdUnitId,
                     Days: dayWithoutComment.map(day => day.Date),
                     Students: setIdNames,
                     Name: student.EdUnitName,
-                    Discipline: student.EdUnitDiscipline
+                    Discipline: student.EdUnitDiscipline,
+                    BeginTime: student.BeginTime,
+                    EndTime: student.EndTime,
+                    Type: 'Group',
                 }
+                )
             }
-            // На этом этапе у нас есть accGroupDayWithoutThemes - объект полезной информации по группам, состоящий из
-            // '29506': {                            id группы
+            // На этом этапе у нас есть accGroupDayWithoutThemes - массив полезной информации по группам, состоящий из объектов, типа:
+            //     Id:  29506,                       id группы
+            //     Type: 'Group',                    тип группы
             //     Days: [                           дни без комментариев
+            //     BeginTime:    '13:50',            время начала занятий
+            //     EndTime: '15:30',                 время конца занятий
             //     '2025-01-18', '2025-01-25',        
             //     '2025-02-01', '2025-02-08',
             //     '2025-02-15', '2025-02-22',
@@ -175,13 +180,22 @@ class HooliHopService {
             //     Name: 'WEB-2-GROUP сайт магазина',
             //     Discipline: 'Web-программирование (2 ступень backend)'
             // }
+
+            // Теперь формируем такой же массив по индивидуальным урокам
             const posibleLessonsFormated = posibleLessonsWithDayIndividual.map(lesson => {
+                const ScheduleItems = lesson.ScheduleItems // Схема уроков, в ней находятся элементы расписания
+                const hasSchedule = ScheduleItems && Array.isArray(ScheduleItems) && ScheduleItems[0] // Есть ли нужный нам элемент расписания
                 return {
+                    Type: 'Individual',
                     Id: lesson.Id,
                     Name: lesson.Name,
                     Discipline: lesson.Discipline,
+                    BeginTime: hasSchedule ? ScheduleItems[0].BeginTime : '-',
+                    EndTime: hasSchedule ? ScheduleItems[0].EndTime : '-',
                     Days: lesson.Days.filter(
-                        day => !day.Description || day.Description.length === 0
+                        day => (new Date(day.Date) <= new Date())                  // День уже наступил
+                            && (!day.Description || day.Description.length === 0)   // Но в нём ещё нет комментария
+                            && !(day.Pass === 0 && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
                     ).map(day => day.Date)
                 }
             }).filter(
@@ -219,10 +233,8 @@ class HooliHopService {
 
             const posibleLessonsFormatedWithClientID = posibleLessonsFormated.map(les => { return { ...les, Students: clientsByIndividualLessons[les.Id] } })
 
-            const finallyData = {
-                groupData: accGroupDayWithoutThemes,
-                individualData: posibleLessonsFormatedWithClientID,
-            }
+            const finallyData = [...accGroupDayWithoutThemes, ...posibleLessonsFormatedWithClientID,]
+
             return finallyData
         } catch (error) {
             logger.error('Error in Hooli-Hop service (getActivitiesForTeacherWithoutThemes):', error.message);

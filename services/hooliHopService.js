@@ -142,8 +142,13 @@ class HooliHopService {
                     return acc
                 }, {})
                 const student = students[0];    // Берем первого попавшегося в группе, првоеряем по нему всю группу, т.к. если группе оставляли комментарии они попали во всех учеников
-                const dayWithoutComment = student.Days.filter( // Находиь дни без комментариев, в прошлом времени
-                    day => (new Date(day.Date) <= new Date()) && (!day.Description || day.Description.length === 0)
+                const dayWithoutComment = student.Days.filter( // Находим дни без комментариев, в прошлом времени
+                    day => {                                   
+                        console.log(day)    
+                        return (new Date(day.Date) <= new Date())               // День уже наступил
+                        && (!day.Description || day.Description.length === 0)   // Но в нём ещё нет комментария
+                        &&  !(day.Pass ===0 && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
+                    }
                 )
                 if (dayWithoutComment.length > 0) accGroupDayWithoutThemes[student.EdUnitId] = {
                     Days: dayWithoutComment.map(day => day.Date),
@@ -201,7 +206,6 @@ class HooliHopService {
                 const results = res.data.EdUnitStudents
                 if (!(results && results.length > 0)) return;
                 const findStudent = results[0]
-                console.log(findStudent)
                 return {
                     [findStudent.EdUnitId]: {
                         [findStudent.StudentClientId]: findStudent.StudentName

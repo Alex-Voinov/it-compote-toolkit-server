@@ -7,6 +7,7 @@ const defineLastThemes = require('../utilities/defineLastThemes');
 const calculateAge = require('../utilities/defineAge');
 const getWeekDates = require('../utilities/getWeekDates');
 const getDayOfWeek = require('../utilities/getDayOfWeek');
+const compareDatesOnly = require('../utilities/compTime');
 
 
 const axiosInstance = axios.create({
@@ -128,6 +129,7 @@ class HooliHopService {
                 lesson => lesson.Days.length > 0 && lesson.Type === 'Individual'
             ) // Оставляем только индивидуальные активности с информацией о днях
             const posibleLessonsWithDayGroup = posibleLessons.filter(lesson => lesson.Type === 'Group') // Получили группы, теперь нужно залезть в учеников в них
+            
             const studentInPosibleLessonsWithDayGroupResponse = await Promise.all(
                 posibleLessonsWithDayGroup.map(
                     group => this.getStudentsByIdGroup(group.Id)
@@ -142,10 +144,10 @@ class HooliHopService {
                     return acc
                 }, {})
                 const student = students[0];    // Берем первого попавшегося в группе, првоеряем по нему всю группу, т.к. если группе оставляли комментарии они попали во всех учеников
-                const dayWithoutComment = student.Days.filter(                  // Находим дни без комментариев, в прошлом времени
-                    day => (new Date(day.Date) <= new Date())                  // День уже наступил
-                        && (!day.Description || day.Description.length === 0)   // Но в нём ещё нет комментария
-                        && !(day.Pass === 0 && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
+                const dayWithoutComment = student.Days.filter(                     // Находим дни без комментариев, в прошлом времени
+                    day => compareDatesOnly(day.Date)                              // День уже наступил
+                        && (!day.Description || day.Description.length === 0)      // Но в нём ещё нет комментария
+                        && !(day.Pass === true && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
                 )
                 if (dayWithoutComment.length > 0) accGroupDayWithoutThemes.push({
                     Id: student.EdUnitId,
@@ -159,6 +161,7 @@ class HooliHopService {
                 }
                 )
             }
+            console.log(accGroupDayWithoutThemes)
             // На этом этапе у нас есть accGroupDayWithoutThemes - массив полезной информации по группам, состоящий из объектов, типа:
             //     Id:  29506,                       id группы
             //     Type: 'Group',                    тип группы
@@ -193,10 +196,11 @@ class HooliHopService {
                     BeginTime: hasSchedule ? ScheduleItems[0].BeginTime : '-',
                     EndTime: hasSchedule ? ScheduleItems[0].EndTime : '-',
                     Days: lesson.Days.filter(
-                        day => (new Date(day.Date) <= new Date())                  // День уже наступил
-                            && (!day.Description || day.Description.length === 0)   // Но в нём ещё нет комментария
-                            && !(day.Pass === 0 && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
-                    ).map(day => day.Date)
+                        day => compareDatesOnly(day.Date)                                 // День уже наступил
+                            && (!day.Description || day.Description.length === 0)         // Но в нём ещё нет комментария
+                            //&& !(day.Pass === false && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
+                            && day.Pass === false                                         // Пропуски не должны попадать 
+                        ).map(day => day.Date)
                 }
             }).filter(
                 lesson => lesson.Days.length

@@ -11,7 +11,7 @@ const logger = require('./logger');         // Подключение логге
 // локалка для веб формы 'http://localhost:5173'
 
 const corsOptions = {
-    origin: process.env.CLIENT_URL, 
+    origin: 'http://localhost:5173', 
     credentials: true,
 };
 

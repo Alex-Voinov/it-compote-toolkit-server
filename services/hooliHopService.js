@@ -126,37 +126,52 @@ class HooliHopService {
             const posibleLessons = activitiesTeacher.data.EdUnits; // Активности педагога
             if (!posibleLessons) return []
             const posibleLessonsWithDayIndividual = posibleLessons.filter(
-                lesson => lesson.Days.length > 0 && lesson.Type === 'Individual'
+                lesson => lesson.Type === 'Individual' // lesson.Days.length > 0 &&
             ) // Оставляем только индивидуальные активности с информацией о днях
+
             const posibleLessonsWithDayGroup = posibleLessons.filter(lesson => lesson.Type === 'Group') // Получили группы, теперь нужно залезть в учеников в них
-            
+
             const studentInPosibleLessonsWithDayGroupResponse = await Promise.all(
                 posibleLessonsWithDayGroup.map(
                     group => this.getStudentsByIdGroup(group.Id)
                 )
             ) // Студенты в группах педагога
             const studentInPosibleLessonsWithDayGroup = studentInPosibleLessonsWithDayGroupResponse.map(res => res.data.EdUnitStudents)
+
             const accGroupDayWithoutThemes = []
-            for (let students of studentInPosibleLessonsWithDayGroup) { // Проходимся по ученикам в группе
+            for (let students of studentInPosibleLessonsWithDayGroup) {            // Проходимся по ученикам в группе
                 if (!Array.isArray(students) || !students.length > 0) continue;
                 const setIdNames = students.reduce((acc, student) => {
-                    acc[student.StudentClientId] = student.StudentName
+                    acc[student.StudentClientId] = {
+                        name: student.StudentName,                                 // Раньше было необходимо только имя, этого оказалось недостаточно, так как студенты уходят из групп или появляются посередине обучения, значит надо запоминать ещё и дни в которые студент учился в группе
+                        days: student.Days.map(day=>day.Date)
+                    }
                     return acc
                 }, {})
-                const student = students[0];    // Берем первого попавшегося в группе, првоеряем по нему всю группу, т.к. если группе оставляли комментарии они попали во всех учеников
-                const dayWithoutComment = student.Days.filter(                     // Находим дни без комментариев, в прошлом времени
-                    day => compareDatesOnly(day.Date)                              // День уже наступил
-                        && (!day.Description || day.Description.length === 0)      // Но в нём ещё нет комментария
-                        && !(day.Pass === true && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
-                )
-                if (dayWithoutComment.length > 0) accGroupDayWithoutThemes.push({
-                    Id: student.EdUnitId,
-                    Days: dayWithoutComment.map(day => day.Date),
+                //Ищем дни без комментариев
+                const allDaysFromThisGroupWithoutComment = []
+                students.forEach(student => {                                          // Проходимся по ВСЕМ студентам в группе
+                    const daysSelectStudentWithoutComment = student.Days.filter(       // Находим дни без комментариев, в прошлом времени
+                        day => compareDatesOnly(day.Date)                              // День уже наступил
+                            && (!day.Description || day.Description.length === 0)      // Но в нём ещё нет комментария
+                            && !(day.Pass === true && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
+                    )
+                    daysSelectStudentWithoutComment.forEach(dayWithoutThemes => {
+                        const date = dayWithoutThemes.Date
+                        if (!allDaysFromThisGroupWithoutComment.includes(date)) 
+                            allDaysFromThisGroupWithoutComment.push(date)
+                    })
+                })
+
+                // В идеале, тут брать не от нулевого студента
+                if (allDaysFromThisGroupWithoutComment.length > 0) accGroupDayWithoutThemes.push({
+                    Id: students[0].EdUnitId,
+                    Days: allDaysFromThisGroupWithoutComment,
                     Students: setIdNames,
-                    Name: student.EdUnitName,
-                    Discipline: student.EdUnitDiscipline,
-                    BeginTime: student.BeginTime,
-                    EndTime: student.EndTime,
+                    Name: students[0].EdUnitName,
+                    Discipline: students[0].EdUnitDiscipline,
+                    BeginTime: students[0].BeginTime,
+                    EndTime: students[0].EndTime,
                     Type: 'Group',
                 }
                 )
@@ -200,7 +215,7 @@ class HooliHopService {
                             && (!day.Description || day.Description.length === 0)         // Но в нём ещё нет комментария
                             //&& !(day.Pass === false && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
                             && day.Pass === false                                         // Пропуски не должны попадать 
-                        ).map(day => day.Date)
+                    ).map(day => day.Date)
                 }
             }).filter(
                 lesson => lesson.Days.length
@@ -280,7 +295,7 @@ class HooliHopService {
                 EdUnitId: activityId,
                 StudentClientId: studentId,
                 Description: `*${theme}\n*\n*${comment}`,
-                pass: Object.keys(attendance).length > 0? studentId in attendance ? !(studentId in attendance) : true: false,
+                pass: Object.keys(attendance).length > 0 ? studentId in attendance ? !(studentId in attendance) : true : false,
             }))
 
             const response = await axiosInstance.post(

@@ -7,11 +7,11 @@ const path = require('path');               // Для создания путе�
 const logger = require('./logger');         // Подключение логгера
 
 
-// прода process.env.CLIENT_URL
-// локалка для веб формы 'http://localhost:5173'
+const devMode = true; 
+
 
 const corsOptions = {
-    origin: 'http://localhost:5173', 
+    origin: devMode? process.env.LOCAL_URL: process.env.CLIENT_URL, 
     credentials: true,
 };
 

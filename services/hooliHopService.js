@@ -241,7 +241,7 @@ class HooliHopService {
                 const findStudent = results[0]
                 return {
                     [findStudent.EdUnitId]: {
-                        [findStudent.StudentClientId]: findStudent.StudentName
+                        [findStudent.StudentClientId]: {name: findStudent.StudentName, days: []} // структура тут излишне, а days не нужны вовсе, но для рендера на клиента так удобнее
                     }
                 }
             }).reduce((acc, obj) => {

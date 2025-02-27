@@ -20,10 +20,11 @@ class QueryLimiter {
     }
 
     getErrorStatus(serviceName) {
-        return {
+        console.log('выкинули ошибку')
+        return ({
             status: 404,
             data: { error: `Колличество запросов к ${serviceName} превышает ${this.requestLimitPerSecond} в секунду.` }
-        }
+        })
     }
 }
 

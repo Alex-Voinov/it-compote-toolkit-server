@@ -87,6 +87,8 @@ class Controllers {
                 return res.status(400).json({ error: "Не указан ID сделки" });
             }
             const { status, data } = await amoService.getLatestCall(leadId);
+            console.log(`status: ${status}`)
+            console.log(`data: ${data}`)
             res.status(status).json(data)
         } catch (error) {
             logger.error(`Ошибка в контроллере getLatestCall: ${error}.`)

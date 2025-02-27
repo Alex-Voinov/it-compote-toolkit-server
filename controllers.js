@@ -1,5 +1,6 @@
 const hooliHopService = require("./services/hooliHopService");
 const googleSheetService = require("./services/googleSheetService");
+const amoService = require("./services/amoService");
 const { capitalize } = require('./utilities/strFunc')
 const defineLastThemes = require('./utilities/defineLastThemes')
 const formatDate = require('./utilities/datePerfectView');
@@ -79,6 +80,20 @@ class Controllers {
         }
     }
 
+    async getLatestCall(req, res, next) {
+        try {
+            const leadId = req.query.id;
+            if (!leadId) {
+                return res.status(400).json({ error: "Не указан ID сделки" });
+            }
+            const { status, data } = await amoService.getLatestCall(leadId);
+            res.status(status).json(data)
+        } catch (error) {
+            logger.error(`Ошибка в контроллере getLatestCall: ${error}.`)
+            res.status(500).json({ error: "Внутренняя ошибка сервера" });
+        }
+    }
+
     async verifyTeacher(req, res, next) {
         try {
             const { email, password } = req.query;
@@ -131,7 +146,7 @@ class Controllers {
                 lecturer,            // Преподаватель заполневший активность {ClientId, FullName}
                 attendance,          // Посещаемость учеников {ClientId, true/false} (если id нет - ученика не было)
             } = req.query;
-            if (!activityId || !date || !theme  || !generalComments || !rates || !lecturer)
+            if (!activityId || !date || !theme || !generalComments || !rates || !lecturer)
                 return res.status(400).send('Неверный формат ввода данных')
             const rowForGoogleSheet = [
                 lecturer.FullName,

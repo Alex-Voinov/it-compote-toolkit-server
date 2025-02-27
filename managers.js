@@ -16,4 +16,4 @@ const MANAGERS = {
     12011769: "Айдын Малаев"
 };
 
-export default MANAGERS;
+module.exports = MANAGERS;

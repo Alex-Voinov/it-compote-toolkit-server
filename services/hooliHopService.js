@@ -125,6 +125,13 @@ class HooliHopService {
             );
             const posibleLessons = activitiesTeacher.data.EdUnits; // Активности педагога
             if (!posibleLessons) return []
+
+            // Так как педагоги иногда на заменах, в одной группе может быть много преподавателей. Надо запоминать дни, в которые преподаватель вел занятия в группе
+            const activitiesDayByIdGroup = posibleLessons.reduce((acc, item) => { 
+                acc[item.Id] = item.Days.map(day=>day.Date);
+                return acc;
+            }, {});
+
             const posibleLessonsWithDayIndividual = posibleLessons.filter(
                 lesson => lesson.Type === 'Individual' // lesson.Days.length > 0 &&
             ) // Оставляем только индивидуальные активности с информацией о днях
@@ -144,21 +151,22 @@ class HooliHopService {
                 const setIdNames = students.reduce((acc, student) => {
                     acc[student.StudentClientId] = {
                         name: student.StudentName,                                 // Раньше было необходимо только имя, этого оказалось недостаточно, так как студенты уходят из групп или появляются посередине обучения, значит надо запоминать ещё и дни в которые студент учился в группе
-                        days: student.Days.map(day=>day.Date)
+                        days: student.Days.map(day => day.Date)
                     }
                     return acc
                 }, {})
                 //Ищем дни без комментариев
                 const allDaysFromThisGroupWithoutComment = []
-                students.forEach(student => {                                          // Проходимся по ВСЕМ студентам в группе
-                    const daysSelectStudentWithoutComment = student.Days.filter(       // Находим дни без комментариев, в прошлом времени
-                        day => compareDatesOnly(day.Date)                              // День уже наступил
-                            && (!day.Description || day.Description.length === 0)      // Но в нём ещё нет комментария
-                            && !(day.Pass === true && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
+                students.forEach(student => {                                                   // Проходимся по ВСЕМ студентам в группе
+                    const daysSelectStudentWithoutComment = student.Days.filter(                // Находим дни без комментариев, в прошлом времени
+                        day => compareDatesOnly(day.Date)                                       // День уже наступил
+                            && activitiesDayByIdGroup[student.EdUnitId].includes(day.Date)      // В этот день урок проводился выбранным педагогом                          
+                            && (!day.Description || day.Description.length === 0)               // Но в нём ещё нет комментария
+                            && !(day.Pass === true && day.TeacherPayableMinutes > 0)            // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
                     )
                     daysSelectStudentWithoutComment.forEach(dayWithoutThemes => {
                         const date = dayWithoutThemes.Date
-                        if (!allDaysFromThisGroupWithoutComment.includes(date)) 
+                        if (!allDaysFromThisGroupWithoutComment.includes(date))
                             allDaysFromThisGroupWithoutComment.push(date)
                     })
                 })
@@ -176,7 +184,7 @@ class HooliHopService {
                 }
                 )
             }
-            console.log(accGroupDayWithoutThemes)
+            //console.log(accGroupDayWithoutThemes)
             // На этом этапе у нас есть accGroupDayWithoutThemes - массив полезной информации по группам, состоящий из объектов, типа:
             //     Id:  29506,                       id группы
             //     Type: 'Group',                    тип группы
@@ -213,6 +221,7 @@ class HooliHopService {
                     Days: lesson.Days.filter(
                         day => compareDatesOnly(day.Date)                                 // День уже наступил
                             && (!day.Description || day.Description.length === 0)         // Но в нём ещё нет комментария
+                            && activitiesDayByIdGroup[lesson.Id].includes(day.Date)      // В этот день урок проводился выбранным педагогом  
                             //&& !(day.Pass === false && day.TeacherPayableMinutes > 0)   // и он не является оплачиваемым пропуском (Нет пропуска, за который заплачено)
                             && day.Pass === false                                         // Пропуски не должны попадать 
                     ).map(day => day.Date)
@@ -241,7 +250,7 @@ class HooliHopService {
                 const findStudent = results[0]
                 return {
                     [findStudent.EdUnitId]: {
-                        [findStudent.StudentClientId]: {name: findStudent.StudentName, days: []} // структура тут излишне, а days не нужны вовсе, но для рендера на клиента так удобнее
+                        [findStudent.StudentClientId]: { name: findStudent.StudentName, days: [] } // структура тут излишне, а days не нужны вовсе, но для рендера на клиента так удобнее
                     }
                 }
             }).reduce((acc, obj) => {

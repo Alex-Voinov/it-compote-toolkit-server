@@ -7,7 +7,7 @@ const path = require('path');               // Для создания путе�
 const logger = require('./logger');         // Подключение логгера
 
 
-const devMode = 0; 
+const devMode = 1; 
 
 
 const corsOptions = {

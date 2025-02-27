@@ -13,14 +13,14 @@ const axiosInstance = axios.create({
 class AmoService {
     async getLatestCall(leadId) {
         try {
-            if (!queryLimiter.queryabilityCheck()) return queryLimiter.getErrorStatus('Amo');
+            // if (!queryLimiter.queryabilityCheck()) return queryLimiter.getErrorStatus('Amo');
             const leadResponse = await axiosInstance.get(`leads/${leadId}?with=contacts`);
             const contacts = leadResponse.data?._embedded?.contacts || [];
 
             let relatedLeads = [leadId];
             for (const contact of contacts) {
                 const contactId = contact.id;
-                if (!queryLimiter.queryabilityCheck()) return queryLimiter.getErrorStatus('Amo');
+                // if (!queryLimiter.queryabilityCheck()) return queryLimiter.getErrorStatus('Amo');
                 const contactResponse = await axiosInstance.get(`contacts/${contactId}?with=leads`);
                 const contactData = contactResponse.data
                 if (contactData?._embedded?.leads) {
@@ -32,7 +32,7 @@ class AmoService {
             let earliestCall = null;
 
             for (const lead of relatedLeads) {
-                if (!queryLimiter.queryabilityCheck()) return queryLimiter.getErrorStatus('Amo');
+                // if (!queryLimiter.queryabilityCheck()) return queryLimiter.getErrorStatus('Amo');
                 const callsResponse = await axiosInstance.get(
                     'events',
                     {

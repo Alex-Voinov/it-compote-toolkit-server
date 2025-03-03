@@ -304,9 +304,9 @@ class HooliHopService {
                 EdUnitId: activityId,
                 StudentClientId: studentId,
                 Description: `*${theme}\n*\n*${comment}`,
-                pass: Object.keys(attendance).length > 0 ? studentId in attendance ? !(studentId in attendance) : true : false,
+                pass: attendance[studentId],
             }))
-
+            console.log(data)
             const response = await axiosInstance.post(
                 "SetStudentPasses",
                 data,

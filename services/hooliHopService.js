@@ -127,8 +127,8 @@ class HooliHopService {
             if (!posibleLessons) return []
 
             // Так как педагоги иногда на заменах, в одной группе может быть много преподавателей. Надо запоминать дни, в которые преподаватель вел занятия в группе
-            const activitiesDayByIdGroup = posibleLessons.reduce((acc, item) => { 
-                acc[item.Id] = item.Days.map(day=>day.Date);
+            const activitiesDayByIdGroup = posibleLessons.reduce((acc, item) => {
+                acc[item.Id] = item.Days.map(day => day.Date);
                 return acc;
             }, {});
 
@@ -306,8 +306,24 @@ class HooliHopService {
                 Description: `*${theme}\n*\n*${comment}`,
                 pass: attendance[studentId],
             }))
+            // Холихоп меняет данные об уроках, только при условии того, что входной pass отличается от имеющегося
+            const dateReversePass = data.map(item => ({
+                ...item,
+                pass: item.pass === 'true' ? false : true
+            }));
+            await axiosInstance.post(
+                "SetStudentPasses",
+                dateReversePass,
+                {
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    }
+                }
+            );
+            console.log(dateReversePass)
+            await new Promise(resolve => setTimeout(resolve, 1000))
             console.log(data)
-            const response = await axiosInstance.post(
+            await axiosInstance.post(
                 "SetStudentPasses",
                 data,
                 {

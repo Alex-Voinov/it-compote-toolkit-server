@@ -5,7 +5,7 @@ const { capitalize } = require('./utilities/strFunc')
 const defineLastThemes = require('./utilities/defineLastThemes')
 const formatDate = require('./utilities/datePerfectView');
 const logger = require("./logger");
-const lessonTopics  = require("./states/LessonTopics");
+const lessonTopics  = require("./states/lessonTopics");
 
 
 class Controllers {
@@ -71,7 +71,7 @@ class Controllers {
             res.status(400).json(error)
         }
     }
-    
+
     async getTopicsAcrossDisciplines(req, res, next) {
         try {
             const topics = await lessonTopics.getTopics();

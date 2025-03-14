@@ -5,6 +5,7 @@ const { capitalize } = require('./utilities/strFunc')
 const defineLastThemes = require('./utilities/defineLastThemes')
 const formatDate = require('./utilities/datePerfectView');
 const logger = require("./logger");
+const lessonTopics  = require("./states/LessonTopics");
 
 
 class Controllers {
@@ -70,9 +71,10 @@ class Controllers {
             res.status(400).json(error)
         }
     }
+    
     async getTopicsAcrossDisciplines(req, res, next) {
         try {
-            const topics = await googleSheetService.getTopicsAcrossDisciplines()
+            const topics = await lessonTopics.getTopics();
             if (topics) return res.status(200).json(topics)
             return res.status(502)
         } catch (error) {

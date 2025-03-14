@@ -1,4 +1,4 @@
-const googleSheetService = require("../googleSheetService");
+const googleSheetService = require("../services/googleSheetService");
 
 function isOneHourPassed(date) {
     const oneHourInMilliseconds = 3600000;
@@ -15,7 +15,7 @@ class LessonTopics {
     }
 
     async getTopics() {
-        if (lastUpdate === null || isOneHourPassed(this.lastUpdate)) {
+        if (this.lastUpdate === null || isOneHourPassed(this.lastUpdate)) {
             await this.updateTopics()
         }
         return this.topics
@@ -23,4 +23,4 @@ class LessonTopics {
 
 }
 
-export default new LessonTopics();
+module.exports =  new LessonTopics();

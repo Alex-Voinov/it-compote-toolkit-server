@@ -5,7 +5,8 @@ const { capitalize } = require('./utilities/strFunc')
 const defineLastThemes = require('./utilities/defineLastThemes')
 const formatDate = require('./utilities/datePerfectView');
 const logger = require("./logger");
-const lessonTopics  = require("./states/lessonTopics");
+const lessonTopics  = require("./stores/lessonTopics");
+const payments  = require("./stores/payments");
 
 
 class Controllers {
@@ -44,6 +45,17 @@ class Controllers {
             logger.error(`Ошибка в контроллере getDisciplines: ${error}.`)
         }
     }
+
+    async getPaymentsData(req, res, next) {
+        try {
+            const { teacherName } = req.query;
+            const paymentsData = await payments.getPayments(teacherName)
+            res.status(200).json(paymentsData)
+        } catch (error) {
+            logger.error(`Ошибка в контроллере getPaymentsData: ${error}.`)
+        }
+    }
+
     async getLastThems(req, res, next) {
         try {
             const { studentId } = req.query;

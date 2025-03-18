@@ -10,6 +10,7 @@ router.get('/get-disciplines', Controllers.getDisciplines);
 router.get('/get-last-thems', Controllers.getLastThems);
 router.get('/get-topics-across-disciplines', Controllers.getTopicsAcrossDisciplines);
 router.get('/get-latest-call', Controllers.getLatestCall);
+router.get('/get-payments-data', checkCode, Controllers.getPaymentsData);
 router.get('/get-activities-for-teacher-without-themes', checkCode, Controllers.getActivitiesForTeacherWithoutThemes);
 router.get('/pick-group', Controllers.pickGroup);
 router.get('/verify-teacher', Controllers.verifyTeacher)

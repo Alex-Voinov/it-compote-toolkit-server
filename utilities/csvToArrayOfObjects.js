@@ -1,5 +1,6 @@
 const Papa = require('papaparse');
 
+// Для тем уроков по дисциплинам
 const csvToArrayOfObjects = (csv) => {
     return new Promise((resolve, reject) => {
         Papa.parse(csv, {

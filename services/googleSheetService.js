@@ -5,6 +5,7 @@ const { google } = require('googleapis');
 const credentials = require('../googleSheetKey.json'); // Укажите путь к JSON-файлу
 const googleGidData = require('../utilities/googleGidData');
 const logger = require('../logger');
+const csvToArrayOfObjects2 = require('../utilities/csvToArrayOfObjects2');
 // Аутентификация
 const auth = new google.auth.GoogleAuth({
     credentials,
@@ -12,6 +13,24 @@ const auth = new google.auth.GoogleAuth({
 });
 const sheets = google.sheets({ version: 'v4', auth });
 
+
+// Один в один захардкодил с гугл-таблицы, звездочкой отметил свои коменты
+const PAYMENT_HEADERS = [
+    'id',               // ID
+    'group',            // Группа
+    'discipline',       // Направление
+    'level',            // Уровень
+    'type',             // Язык
+    'student',          // Ученик
+    'date',             // Дата_
+    'isPass',           // Посещено
+    'paument',          // Оплачено
+    'groupId',          // ID_gu???
+    '',                 // *Тупо пустой столбик
+    'lecruter',         // Преподаватель
+    'money',            // МОНЕТКИ
+    ''                  // *Нет заголовка 
+]
 
 class GoogleSheetService {
     getTopicsAcrossDisciplines = async () => {
@@ -37,6 +56,23 @@ class GoogleSheetService {
 
         } catch (error) {
             logger.error('Error in GoogleSheetService service (getTopicsAcrossDisciplines):', error.message);
+            throw error;
+        }
+    }
+    getPayments = async () => {
+        try {
+            const SHEET_URL = `${process.env.PAYMENT_GOOGLE_SHEET_URL}/export?format=csv`;
+            // Получаем CSV данные
+            const response = await axios.get(SHEET_URL);
+
+            // Преобразуем CSV в массив объектов
+            const data = await response.data;
+
+            // Возвращаем данные
+            return csvToArrayOfObjects2(data, PAYMENT_HEADERS);
+
+        } catch (error) {
+            logger.error('Error in GoogleSheetService service (getPayments):', error.message);
             throw error;
         }
     }

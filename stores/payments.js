@@ -18,7 +18,7 @@ class Payments {
             discipline: paymentRow.discipline,
             type: paymentRow.type,
             student: paymentRow.student,
-            money: 90,//paymentRow.money, 
+            money: isNaN(parseFloat(paymentRow.money)) ? 0 : parseFloat(paymentRow.money),
             isPass: paymentRow.isPass,
             id: paymentRow.id,
             monthName: getMonthByDate(paymentRow.date),
@@ -44,12 +44,14 @@ class Payments {
                     paymentsDataByMonth[index].AmounPayments += Number(oneActivity.money);
                     const formatedActivity = { ...oneActivity }
                     delete formatedActivity.monthName
+                    delete formatedActivity.lecruter
                     paymentsDataByMonth[index].data.push(formatedActivity);
                 }
                 else {
                     // её в массиве нет, создаем
                     const formatedActivity = { ...oneActivity }
                     delete formatedActivity.monthName
+                    delete formatedActivity.lecruter
                     const monthRow = {
                         monthName: oneActivity.monthName,
                         AmounPayments: Number(oneActivity.money),
